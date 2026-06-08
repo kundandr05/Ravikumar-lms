@@ -9,9 +9,13 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Course } from '@/types';
 import Link from 'next/link';
 
+interface EnrolledCourse extends Course {
+  progressPercentage?: number;
+}
+
 export default function StudentCoursesPage() {
   const { appUser } = useAuth();
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
@@ -39,7 +43,7 @@ export default function StudentCoursesPage() {
       });
 
       // 3. Split into enrolled and available
-      const enrolled: Course[] = [];
+      const enrolled: EnrolledCourse[] = [];
       const available: Course[] = [];
 
       allCourses.forEach(course => {
@@ -49,6 +53,34 @@ export default function StudentCoursesPage() {
           available.push(course);
         }
       });
+
+      // 4. Fetch Progress for enrolled courses
+      if (enrolled.length > 0) {
+        // Fetch all lessons to get total counts per course
+        const allLessonsSnap = await getDocs(collection(db, 'lessons'));
+        const lessonCounts: Record<string, number> = {};
+        allLessonsSnap.forEach(d => {
+          const cId = d.data().courseId;
+          lessonCounts[cId] = (lessonCounts[cId] || 0) + 1;
+        });
+
+        // Fetch all progress for student
+        const progSnap = await getDocs(
+          query(collection(db, 'lessonProgress'), where('studentId', '==', appUser.uid), where('completed', '==', true))
+        );
+        const progCounts: Record<string, number> = {};
+        progSnap.forEach(d => {
+          const cId = d.data().courseId;
+          progCounts[cId] = (progCounts[cId] || 0) + 1;
+        });
+
+        // Calculate percentages
+        enrolled.forEach(c => {
+          const total = lessonCounts[c.courseId!] || 0;
+          const completed = progCounts[c.courseId!] || 0;
+          c.progressPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        });
+      }
 
       setEnrolledCourses(enrolled);
       setAvailableCourses(available);
@@ -122,7 +154,16 @@ export default function StudentCoursesPage() {
                   )}
                 </div>
                 <CardContent className="p-6 flex flex-col flex-1">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">{course.title}</h3>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-slate-900">{course.title}</h3>
+                    <span className="text-sm font-bold text-emerald-600">{course.progressPercentage}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mb-4 overflow-hidden">
+                    <div 
+                      className="bg-emerald-500 h-full rounded-full transition-all duration-1000" 
+                      style={{ width: `${course.progressPercentage}%` }} 
+                    />
+                  </div>
                   <p className="text-sm text-slate-600 line-clamp-2 mb-6 flex-1">{course.description}</p>
                   <Link 
                     href={`/dashboard/student/courses/${course.courseId}`} 

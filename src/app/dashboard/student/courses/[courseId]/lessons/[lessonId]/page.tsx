@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Course, Lesson } from '@/types';
@@ -39,6 +39,8 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [marking, setMarking] = useState(false);
 
   useEffect(() => {
     async function loadLessonData() {
@@ -84,6 +86,16 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         });
         setAllLessons(fetchedLessons);
 
+        setAllLessons(fetchedLessons);
+
+        // 5. Check if completed
+        const progressDoc = await getDoc(doc(db, 'lessonProgress', `${appUser.uid}_${lessonId}`));
+        if (progressDoc.exists() && progressDoc.data().completed) {
+          setIsCompleted(true);
+        } else {
+          setIsCompleted(false);
+        }
+
       } catch (error) {
         console.error("Error loading lesson player data:", error);
       } finally {
@@ -97,6 +109,25 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading video player...</div>;
   }
+
+  const handleMarkAsComplete = async () => {
+    if (!appUser?.uid || isCompleted) return;
+    setMarking(true);
+    try {
+      await setDoc(doc(db, 'lessonProgress', `${appUser.uid}_${lessonId}`), {
+        studentId: appUser.uid,
+        lessonId: lessonId,
+        courseId: courseId,
+        completed: true,
+        completedAt: serverTimestamp()
+      });
+      setIsCompleted(true);
+    } catch (error) {
+      console.error("Error marking lesson complete", error);
+    } finally {
+      setMarking(false);
+    }
+  };
 
   if (!isEnrolled) {
     return (
@@ -152,21 +183,41 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
             </h1>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t border-slate-200">
-            {prevLesson ? (
-              <Link href={`/dashboard/student/courses/${courseId}/lessons/${prevLesson.lessonId}`} className={buttonVariants({ variant: "outline" })}>
-                &larr; Previous Lesson
-              </Link>
-            ) : <div />}
+          {/* Navigation & Progress Buttons */}
+          <div className="flex flex-wrap justify-between items-center gap-4 pt-6 border-t border-slate-200">
+            <div className="flex gap-4">
+              {prevLesson ? (
+                <Link href={`/dashboard/student/courses/${courseId}/lessons/${prevLesson.lessonId}`} className={buttonVariants({ variant: "outline" })}>
+                  &larr; Previous Lesson
+                </Link>
+              ) : <div />}
+            </div>
 
-            {nextLesson ? (
-              <Link href={`/dashboard/student/courses/${courseId}/lessons/${nextLesson.lessonId}`} className={buttonVariants()}>
-                Next Lesson &rarr;
-              </Link>
-            ) : (
-              <Button disabled variant="secondary">End of Course</Button>
-            )}
+            <Button 
+              variant={isCompleted ? "secondary" : "default"} 
+              className={isCompleted ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-emerald-600 hover:bg-emerald-700"}
+              onClick={handleMarkAsComplete}
+              disabled={isCompleted || marking}
+            >
+              {isCompleted ? (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  Completed
+                </>
+              ) : (
+                marking ? 'Marking...' : 'Mark as Complete'
+              )}
+            </Button>
+
+            <div className="flex gap-4">
+              {nextLesson ? (
+                <Link href={`/dashboard/student/courses/${courseId}/lessons/${nextLesson.lessonId}`} className={buttonVariants()}>
+                  Next Lesson &rarr;
+                </Link>
+              ) : (
+                <Button disabled variant="secondary">End of Course</Button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -16,6 +16,7 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -72,6 +73,21 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
           fetchedTests.push({ testId: d.id, ...d.data() } as Test);
         });
         setTests(fetchedTests);
+
+        // 5. Fetch Lesson Progress
+        const progressQuery = query(
+          collection(db, 'lessonProgress'),
+          where('studentId', '==', appUser.uid),
+          where('courseId', '==', courseId),
+          where('completed', '==', true)
+        );
+        const progressSnap = await getDocs(progressQuery);
+        const completedIds = new Set<string>();
+        progressSnap.forEach(d => {
+          completedIds.add(d.data().lessonId);
+        });
+        setCompletedLessonIds(completedIds);
+        
       } catch (error) {
         console.error("Error fetching course data:", error);
       } finally {
@@ -100,6 +116,10 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
     return <div className="p-8 text-center text-red-500">Course not found.</div>;
   }
 
+  const progressPercentage = lessons.length > 0 
+    ? Math.round((completedLessonIds.size / lessons.length) * 100) 
+    : 0;
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <Link href="/dashboard/student/courses" className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
@@ -126,6 +146,25 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
         </CardContent>
       </Card>
 
+      {/* Progress Bar Header */}
+      <Card className="shadow-sm border-emerald-100 bg-emerald-50/50">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-3">
+            <div>
+              <h3 className="font-bold text-slate-900">Your Progress</h3>
+              <p className="text-sm text-slate-500">{completedLessonIds.size} of {lessons.length} lessons completed</p>
+            </div>
+            <div className="text-2xl font-black text-emerald-600">{progressPercentage}%</div>
+          </div>
+          <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out" 
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Curriculum</h2>
@@ -138,17 +177,23 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
           </div>
         ) : (
           <div className="grid gap-4">
-            {lessons.map((lesson) => (
-              <Link 
-                key={lesson.lessonId} 
-                href={`/dashboard/student/courses/${courseId}/lessons/${lesson.lessonId}`}
-                className="group"
-              >
-                <Card className="hover:border-amber-500 transition-colors cursor-pointer group-hover:shadow-md">
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="bg-slate-100 group-hover:bg-amber-100 group-hover:text-amber-700 text-slate-600 font-bold w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors">
-                      {lesson.order}
-                    </div>
+            {lessons.map((lesson) => {
+              const isCompleted = completedLessonIds.has(lesson.lessonId!);
+              return (
+                <Link 
+                  key={lesson.lessonId} 
+                  href={`/dashboard/student/courses/${courseId}/lessons/${lesson.lessonId}`}
+                  className="group"
+                >
+                  <Card className={`hover:border-amber-500 transition-colors cursor-pointer group-hover:shadow-md ${isCompleted ? 'bg-emerald-50/30' : ''}`}>
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 group-hover:bg-amber-100 group-hover:text-amber-700 text-slate-600 font-bold'}`}>
+                        {isCompleted ? (
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          lesson.order
+                        )}
+                      </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-lg font-bold text-slate-900 truncate group-hover:text-amber-700 transition-colors">{lesson.title}</h4>
                       <div className="flex gap-4 text-xs text-slate-500 mt-1">
@@ -170,7 +215,7 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+            )})}
           </div>
         )}
       </div>
