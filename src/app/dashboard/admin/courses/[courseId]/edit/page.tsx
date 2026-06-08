@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 
-export default function EditCoursePage({ params }: { params: { courseId: string } }) {
+export default function EditCoursePage({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   
@@ -24,7 +25,7 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
   useEffect(() => {
     async function loadCourse() {
       try {
-        const courseDoc = await getDoc(doc(db, 'courses', params.courseId));
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
           const data = courseDoc.data();
           setTitle(data.title || '');
@@ -40,19 +41,19 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
       }
     }
     loadCourse();
-  }, [params.courseId, router]);
+  }, [courseId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      await updateDoc(doc(db, 'courses', params.courseId), {
+      await updateDoc(doc(db, 'courses', courseId), {
         title,
         description,
         thumbnail,
       });
-      router.push(`/dashboard/admin/courses/${params.courseId}`);
+      router.push(`/dashboard/admin/courses/${courseId}`);
     } catch (error) {
       console.error("Error updating course", error);
       alert("Failed to update course");
@@ -72,7 +73,7 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${params.courseId}`)}>Back</Button>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${courseId}`)}>Back</Button>
         <h1 className="text-3xl font-bold">Edit Course</h1>
       </div>
       

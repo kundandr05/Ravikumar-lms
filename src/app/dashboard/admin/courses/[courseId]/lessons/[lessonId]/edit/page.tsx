@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, storage } from '@/lib/firebase/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 
-export default function EditLessonPage({ params }: { params: { courseId: string, lessonId: string } }) {
+export default function EditLessonPage({ params }: { params: Promise<{ courseId: string, lessonId: string }> }) {
+  const { courseId, lessonId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   
@@ -28,7 +29,7 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
   useEffect(() => {
     async function loadLesson() {
       try {
-        const lessonDoc = await getDoc(doc(db, 'lessons', params.lessonId));
+        const lessonDoc = await getDoc(doc(db, 'lessons', lessonId));
         if (lessonDoc.exists()) {
           const data = lessonDoc.data();
           setTitle(data.title || '');
@@ -36,7 +37,7 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
           setOrder(data.order || 1);
           setExistingPdf(data.notesPdf || '');
         } else {
-          router.push(`/dashboard/admin/courses/${params.courseId}`);
+          router.push(`/dashboard/admin/courses/${courseId}`);
         }
       } catch (error) {
         console.error("Error loading lesson:", error);
@@ -45,7 +46,7 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
       }
     }
     loadLesson();
-  }, [params.lessonId, params.courseId, router]);
+  }, [lessonId, courseId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
 
       // Handle PDF Upload if a NEW file was selected
       if (pdfFile) {
-        const storageRef = ref(storage, `notes/${params.courseId}/${Date.now()}_${pdfFile.name}`);
+        const storageRef = ref(storage, `notes/${courseId}/${Date.now()}_${pdfFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, pdfFile);
 
         await new Promise((resolve, reject) => {
@@ -78,14 +79,14 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
         });
       }
 
-      await updateDoc(doc(db, 'lessons', params.lessonId), {
+      await updateDoc(doc(db, 'lessons', lessonId), {
         title,
         videoUrl,
         notesPdf: notesPdfUrl,
         order: Number(order),
       });
       
-      router.push(`/dashboard/admin/courses/${params.courseId}`);
+      router.push(`/dashboard/admin/courses/${courseId}`);
     } catch (error) {
       console.error("Error updating lesson", error);
       alert("Failed to update lesson.");
@@ -106,7 +107,7 @@ export default function EditLessonPage({ params }: { params: { courseId: string,
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${params.courseId}`)}>Back</Button>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${courseId}`)}>Back</Button>
         <h1 className="text-3xl font-bold">Edit Lesson</h1>
       </div>
       

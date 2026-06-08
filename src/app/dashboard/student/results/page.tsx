@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface TestAttempt {
   id: string;
@@ -62,6 +63,12 @@ export default function StudentResultsPage() {
     return 'text-red-600 bg-red-100';
   };
 
+  // Prepare chart data (chronological order)
+  const chartData = [...attempts].reverse().map((attempt, index) => ({
+    name: attempt.testTitle || `Test ${index + 1}`,
+    score: Math.round(attempt.scorePercentage)
+  }));
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
@@ -69,7 +76,51 @@ export default function StudentResultsPage() {
         <p className="text-slate-500 mt-2">Track your test performance and progress.</p>
       </div>
 
-      <Card>
+      {attempts.length > 0 && (
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Performance History</CardTitle>
+            <CardDescription>Your test scores over time.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-72 w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    dy={10} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    domain={[0, 100]}
+                  />
+                  <Tooltip 
+                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="score" 
+                    name="Score (%)"
+                    stroke="#f59e0b" 
+                    strokeWidth={3}
+                    dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, fill: '#b45309' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Test History</CardTitle>
         </CardHeader>

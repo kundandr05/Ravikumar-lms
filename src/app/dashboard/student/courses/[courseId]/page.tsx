@@ -1,20 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
-import { Course, Lesson } from '@/types';
+import { Course, Lesson, Test } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function StudentCourseViewPage({ params }: { params: { courseId: string } }) {
+export default function StudentCourseViewPage({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
 
@@ -27,7 +29,7 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
         const enrollQuery = query(
           collection(db, 'enrollments'), 
           where('studentId', '==', appUser.uid),
-          where('courseId', '==', params.courseId)
+          where('courseId', '==', courseId)
         );
         const enrollSnap = await getDocs(enrollQuery);
         
@@ -39,7 +41,7 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
         setIsEnrolled(true);
 
         // 2. Fetch Course Data
-        const courseDoc = await getDoc(doc(db, 'courses', params.courseId));
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
           setCourse({ courseId: courseDoc.id, ...courseDoc.data() } as Course);
         }
@@ -47,7 +49,7 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
         // 3. Fetch Lessons
         const lessonsQuery = query(
           collection(db, 'lessons'), 
-          where('courseId', '==', params.courseId),
+          where('courseId', '==', courseId),
           orderBy('order', 'asc')
         );
         const lessonsSnap = await getDocs(lessonsQuery);
@@ -57,6 +59,19 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
         });
         
         setLessons(fetchedLessons);
+
+        // 4. Fetch Tests
+        const testsQuery = query(
+          collection(db, 'tests'),
+          where('courseId', '==', courseId),
+          orderBy('createdAt', 'asc')
+        );
+        const testsSnap = await getDocs(testsQuery);
+        const fetchedTests: Test[] = [];
+        testsSnap.forEach(d => {
+          fetchedTests.push({ testId: d.id, ...d.data() } as Test);
+        });
+        setTests(fetchedTests);
       } catch (error) {
         console.error("Error fetching course data:", error);
       } finally {
@@ -65,7 +80,7 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
     }
 
     checkEnrollmentAndFetch();
-  }, [params.courseId, appUser]);
+  }, [courseId, appUser]);
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading course curriculum...</div>;
@@ -126,7 +141,7 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
             {lessons.map((lesson) => (
               <Link 
                 key={lesson.lessonId} 
-                href={`/dashboard/student/courses/${params.courseId}/lessons/${lesson.lessonId}`}
+                href={`/dashboard/student/courses/${courseId}/lessons/${lesson.lessonId}`}
                 className="group"
               >
                 <Card className="hover:border-amber-500 transition-colors cursor-pointer group-hover:shadow-md">
@@ -155,6 +170,42 @@ export default function StudentCourseViewPage({ params }: { params: { courseId: 
                   </CardContent>
                 </Card>
               </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tests Section */}
+      <div className="space-y-6 pt-6 border-t">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Assessments</h2>
+          <p className="text-slate-500">Test your knowledge with these MCQ tests.</p>
+        </div>
+
+        {tests.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 italic">
+            No tests available for this course yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tests.map((test) => (
+              <Card key={test.testId} className="hover:border-amber-500 transition-colors">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-slate-900">{test.title}</h3>
+                    <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">
+                      {test.durationMinutes} min
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-600 line-clamp-2">{test.description}</p>
+                  <Link 
+                    href={`/dashboard/student/courses/${courseId}/tests/${test.testId}`} 
+                    className={buttonVariants({ variant: "outline", className: "w-full border-amber-200 text-amber-700 hover:bg-amber-50" })}
+                  >
+                    View Details
+                  </Link>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}

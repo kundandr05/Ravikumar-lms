@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -28,7 +28,8 @@ function getYouTubeEmbedUrl(url: string) {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
 }
 
-export default function StudentLessonPlayerPage({ params }: { params: { courseId: string, lessonId: string } }) {
+export default function StudentLessonPlayerPage({ params }: { params: Promise<{ courseId: string, lessonId: string }> }) {
+  const { courseId, lessonId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   
@@ -48,7 +49,7 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
         const enrollQuery = query(
           collection(db, 'enrollments'), 
           where('studentId', '==', appUser.uid),
-          where('courseId', '==', params.courseId)
+          where('courseId', '==', courseId)
         );
         const enrollSnap = await getDocs(enrollQuery);
         if (enrollSnap.empty) {
@@ -59,13 +60,13 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
         setIsEnrolled(true);
 
         // 2. Fetch Course
-        const courseDoc = await getDoc(doc(db, 'courses', params.courseId));
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
           setCourse({ courseId: courseDoc.id, ...courseDoc.data() } as Course);
         }
 
         // 3. Fetch current Lesson
-        const lessonDoc = await getDoc(doc(db, 'lessons', params.lessonId));
+        const lessonDoc = await getDoc(doc(db, 'lessons', lessonId));
         if (lessonDoc.exists()) {
           setLesson({ lessonId: lessonDoc.id, ...lessonDoc.data() } as Lesson);
         }
@@ -73,7 +74,7 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
         // 4. Fetch all lessons for navigation (Next/Prev)
         const lessonsQuery = query(
           collection(db, 'lessons'), 
-          where('courseId', '==', params.courseId),
+          where('courseId', '==', courseId),
           orderBy('order', 'asc')
         );
         const lessonsSnap = await getDocs(lessonsQuery);
@@ -91,7 +92,7 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
     }
 
     loadLessonData();
-  }, [params.courseId, params.lessonId, appUser]);
+  }, [courseId, lessonId, appUser]);
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading video player...</div>;
@@ -114,13 +115,13 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
   const embedUrl = getYouTubeEmbedUrl(lesson.videoUrl);
 
   // Find next/prev lessons
-  const currentIndex = allLessons.findIndex(l => l.lessonId === params.lessonId);
+  const currentIndex = allLessons.findIndex(l => l.lessonId === lessonId);
   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <Link href={`/dashboard/student/courses/${params.courseId}`} className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
+      <Link href={`/dashboard/student/courses/${courseId}`} className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
         &larr; Back to {course?.title || 'Course'}
       </Link>
 
@@ -154,13 +155,13 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center pt-6 border-t border-slate-200">
             {prevLesson ? (
-              <Link href={`/dashboard/student/courses/${params.courseId}/lessons/${prevLesson.lessonId}`} className={buttonVariants({ variant: "outline" })}>
+              <Link href={`/dashboard/student/courses/${courseId}/lessons/${prevLesson.lessonId}`} className={buttonVariants({ variant: "outline" })}>
                 &larr; Previous Lesson
               </Link>
             ) : <div />}
 
             {nextLesson ? (
-              <Link href={`/dashboard/student/courses/${params.courseId}/lessons/${nextLesson.lessonId}`} className={buttonVariants()}>
+              <Link href={`/dashboard/student/courses/${courseId}/lessons/${nextLesson.lessonId}`} className={buttonVariants()}>
                 Next Lesson &rarr;
               </Link>
             ) : (
@@ -201,11 +202,11 @@ export default function StudentLessonPlayerPage({ params }: { params: { courseId
             </CardHeader>
             <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
               {allLessons.map((l) => {
-                const isActive = l.lessonId === params.lessonId;
+                const isActive = l.lessonId === lessonId;
                 return (
                   <Link 
                     key={l.lessonId}
-                    href={`/dashboard/student/courses/${params.courseId}/lessons/${l.lessonId}`}
+                    href={`/dashboard/student/courses/${courseId}/lessons/${l.lessonId}`}
                     className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors ${isActive ? 'bg-amber-50 hover:bg-amber-50' : ''}`}
                   >
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-amber-600 text-white' : 'bg-slate-200 text-slate-600'}`}>

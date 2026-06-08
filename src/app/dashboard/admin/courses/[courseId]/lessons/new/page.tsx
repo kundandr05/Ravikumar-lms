@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, storage } from '@/lib/firebase/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 
-export default function NewLessonPage({ params }: { params: { courseId: string } }) {
+export default function NewLessonPage({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   
@@ -32,7 +33,7 @@ export default function NewLessonPage({ params }: { params: { courseId: string }
 
       // Handle PDF Upload if a file was selected
       if (pdfFile) {
-        const storageRef = ref(storage, `notes/${params.courseId}/${Date.now()}_${pdfFile.name}`);
+        const storageRef = ref(storage, `notes/${courseId}/${Date.now()}_${pdfFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, pdfFile);
 
         // Wait for upload to complete
@@ -57,7 +58,7 @@ export default function NewLessonPage({ params }: { params: { courseId: string }
 
       // Add lesson to Firestore
       await addDoc(collection(db, 'lessons'), {
-        courseId: params.courseId,
+        courseId: courseId,
         title,
         videoUrl, // Storing the raw URL, we will parse it in the player
         notesPdf: notesPdfUrl,
@@ -65,7 +66,7 @@ export default function NewLessonPage({ params }: { params: { courseId: string }
         createdAt: serverTimestamp(),
       });
       
-      router.push(`/dashboard/admin/courses/${params.courseId}`);
+      router.push(`/dashboard/admin/courses/${courseId}`);
     } catch (error) {
       console.error("Error creating lesson", error);
       alert("Failed to create lesson. Please ensure Storage Rules are configured.");
@@ -82,7 +83,7 @@ export default function NewLessonPage({ params }: { params: { courseId: string }
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${params.courseId}`)}>Back</Button>
+        <Button variant="outline" onClick={() => router.push(`/dashboard/admin/courses/${courseId}`)}>Back</Button>
         <h1 className="text-3xl font-bold">Add New Lesson</h1>
       </div>
       

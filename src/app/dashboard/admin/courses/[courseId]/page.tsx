@@ -1,27 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
 import { doc, getDoc, collection, query, where, getDocs, deleteDoc, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Course, Lesson } from '@/types';
+import { Course, Lesson, Test } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function AdminCourseDetailsPage({ params }: { params: { courseId: string } }) {
+export default function AdminCourseDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchCourseAndLessons() {
       try {
         // Fetch Course
-        const courseDoc = await getDoc(doc(db, 'courses', params.courseId));
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
           setCourse({ courseId: courseDoc.id, ...courseDoc.data() } as Course);
         }
@@ -29,7 +31,7 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
         // Fetch Lessons
         const lessonsQuery = query(
           collection(db, 'lessons'), 
-          where('courseId', '==', params.courseId),
+          where('courseId', '==', courseId),
           orderBy('order', 'asc')
         );
         const lessonsSnap = await getDocs(lessonsQuery);
@@ -39,6 +41,19 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
         });
         
         setLessons(fetchedLessons);
+
+        // Fetch Tests
+        const testsQuery = query(
+          collection(db, 'tests'),
+          where('courseId', '==', courseId),
+          orderBy('createdAt', 'asc')
+        );
+        const testsSnap = await getDocs(testsQuery);
+        const fetchedTests: Test[] = [];
+        testsSnap.forEach(d => {
+          fetchedTests.push({ testId: d.id, ...d.data() } as Test);
+        });
+        setTests(fetchedTests);
       } catch (error) {
         console.error("Error fetching course data:", error);
       } finally {
@@ -46,10 +61,10 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
       }
     }
 
-    if (params.courseId) {
+    if (courseId) {
       fetchCourseAndLessons();
     }
-  }, [params.courseId]);
+  }, [courseId]);
 
   const handleDeleteLesson = async (lessonId: string) => {
     if (confirm("Are you sure you want to delete this lesson?")) {
@@ -90,7 +105,7 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
             <h1 className="text-3xl font-bold">{course.title}</h1>
             <p className="text-slate-300">{course.description}</p>
             <div className="pt-4">
-              <Link href={`/dashboard/admin/courses/${params.courseId}/edit`} className={buttonVariants({ variant: "secondary" })}>
+              <Link href={`/dashboard/admin/courses/${courseId}/edit`} className={buttonVariants({ variant: "secondary" })}>
                 Edit Course Details
               </Link>
             </div>
@@ -103,7 +118,7 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
           <h2 className="text-2xl font-bold text-slate-900">Curriculum</h2>
           <p className="text-slate-500">Manage the lessons for this course.</p>
         </div>
-        <Link href={`/dashboard/admin/courses/${params.courseId}/lessons/new`} className={buttonVariants()}>
+        <Link href={`/dashboard/admin/courses/${courseId}/lessons/new`} className={buttonVariants()}>
           Add Lesson
         </Link>
       </div>
@@ -113,7 +128,7 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
           <CardContent className="space-y-4">
             <h3 className="text-xl font-bold text-slate-700">No Lessons Yet</h3>
             <p className="text-slate-500">Add the first video lesson to start building your curriculum.</p>
-            <Link href={`/dashboard/admin/courses/${params.courseId}/lessons/new`} className={buttonVariants({ variant: "outline" })}>
+            <Link href={`/dashboard/admin/courses/${courseId}/lessons/new`} className={buttonVariants({ variant: "outline" })}>
               Add First Lesson
             </Link>
           </CardContent>
@@ -142,12 +157,57 @@ export default function AdminCourseDetailsPage({ params }: { params: { courseId:
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Link href={`/dashboard/admin/courses/${params.courseId}/lessons/${lesson.lessonId}/edit`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <Link href={`/dashboard/admin/courses/${courseId}/lessons/${lesson.lessonId}/edit`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                     Edit
                   </Link>
                   <Button variant="destructive" size="sm" onClick={() => lesson.lessonId && handleDeleteLesson(lesson.lessonId)}>
                     Delete
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Tests Section */}
+      <div className="flex justify-between items-end pt-8 border-t">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Tests & Assessments</h2>
+          <p className="text-slate-500">Manage MCQ tests for this course.</p>
+        </div>
+        <Link href={`/dashboard/admin/courses/${courseId}/tests/new`} className={buttonVariants()}>
+          Add Test
+        </Link>
+      </div>
+
+      {tests.length === 0 ? (
+        <Card className="border-dashed border-2 bg-slate-50 text-center py-12">
+          <CardContent className="space-y-4">
+            <h3 className="text-xl font-bold text-slate-700">No Tests Yet</h3>
+            <p className="text-slate-500">Create the first MCQ test for your students.</p>
+            <Link href={`/dashboard/admin/courses/${courseId}/tests/new`} className={buttonVariants({ variant: "outline" })}>
+              Create First Test
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {tests.map((test) => (
+            <Card key={test.testId} className="hover:shadow-md transition-shadow flex flex-col">
+              <CardContent className="p-6 flex flex-col flex-1">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{test.title}</h3>
+                <p className="text-sm text-slate-500 line-clamp-2 flex-1">{test.description}</p>
+                <div className="flex items-center gap-4 text-xs text-slate-500 mt-4 font-medium bg-slate-50 p-2 rounded w-max">
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {test.durationMinutes} mins
+                  </span>
+                </div>
+                <div className="mt-6">
+                  <Link href={`/dashboard/admin/courses/${courseId}/tests/${test.testId}`} className={buttonVariants({ variant: "outline", className: "w-full" })}>
+                    Manage Questions
+                  </Link>
                 </div>
               </CardContent>
             </Card>
