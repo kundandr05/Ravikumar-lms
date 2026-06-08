@@ -85,7 +85,7 @@ export default function NewResourcePage() {
 
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory} required>
+              <Select value={category} onValueChange={(val) => setCategory(val as string)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select material type" />
                 </SelectTrigger>

@@ -142,7 +142,7 @@ export default function NewAnnouncementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Target Audience</Label>
-                <Select value={targetAudience} onValueChange={setTargetAudience}>
+                <Select value={targetAudience} onValueChange={(val) => setTargetAudience(val as string)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select target audience" />
                   </SelectTrigger>

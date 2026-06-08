@@ -144,7 +144,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ courseI
 
             <div className="space-y-2 pt-4 border-t">
               <Label>Correct Answer</Label>
-              <Select value={correctOptionIndex} onValueChange={setCorrectOptionIndex}>
+              <Select value={correctOptionIndex} onValueChange={(val) => setCorrectOptionIndex(val as string)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select the correct option" />
                 </SelectTrigger>

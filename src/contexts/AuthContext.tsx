@@ -12,6 +12,7 @@ export interface AppUser {
   email: string | null;
   name: string | null;
   role: UserRole;
+  status?: string;
   // Other fields can be added here
 }
 

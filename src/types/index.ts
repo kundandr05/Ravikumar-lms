@@ -17,9 +17,11 @@ export interface Lesson {
 }
 
 export interface Enrollment {
+  enrollmentId?: string;
   studentId: string;
   courseId: string;
   enrolledAt: any;
+  status?: string;
 }
 
 export interface Test {

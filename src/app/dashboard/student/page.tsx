@@ -57,7 +57,7 @@ export default function StudentDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Welcome back, {appUser.name.split(' ')[0]}!</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}!</h1>
         <p className="text-slate-500 mt-2">Ready to continue your learning journey?</p>
       </div>
 

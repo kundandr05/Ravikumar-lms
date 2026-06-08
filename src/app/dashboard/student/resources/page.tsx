@@ -156,7 +156,7 @@ export default function StudentResourcesPage() {
           />
         </div>
         <div className="w-full md:w-64">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val as string)}>
             <SelectTrigger>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
