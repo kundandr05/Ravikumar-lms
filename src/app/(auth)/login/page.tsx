@@ -27,7 +27,11 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await checkUserStatusAndRedirect(userCredential.user.uid);
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      let errorMessage = err.message || 'Failed to login';
+      if (err.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -2,238 +2,308 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/firebase';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, query, where, getCountFromServer, getAggregateFromServer, average, Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
+} from 'recharts';
 
-interface TestAttempt {
-  id: string;
-  testId: string;
-  testTitle?: string;
-  studentId: string;
-  score: number;
-  totalScore: number;
-  scorePercentage: number;
-  submittedAt: any;
-}
-
-export default function AdminAnalyticsPage() {
-  const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+export default function AdvancedAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
-  // Analytics State
+  // Metrics
+  const [totalStudents, setTotalStudents] = useState(0);
   const [avgScore, setAvgScore] = useState(0);
-  const [totalAttempts, setTotalAttempts] = useState(0);
-  const [participationData, setParticipationData] = useState<any[]>([]);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [participationRate, setParticipationRate] = useState(0);
+  
+  // Chart Data
+  const [dailyActiveData, setDailyActiveData] = useState<any[]>([]);
+  const [watchedLessonsData, setWatchedLessonsData] = useState<any[]>([]);
+  const [completionPieData, setCompletionPieData] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchAnalytics() {
       try {
-        const q = query(collection(db, 'testAttempts'), orderBy('submittedAt', 'desc'));
-        const snap = await getDocs(q);
-        const fetchedAttempts: TestAttempt[] = [];
+        const now = new Date();
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        const sevenDaysAgoTimestamp = Timestamp.fromDate(sevenDaysAgo);
+
+        // 1. Aggregations (Optimized Firestore Queries)
+        const studentsQuery = query(collection(db, 'users'), where('role', '==', 'student'));
+        const studentsCountSnap = await getCountFromServer(studentsQuery);
+        const studentsCount = studentsCountSnap.data().count;
+        setTotalStudents(studentsCount);
+
+        const testAttemptsRef = collection(db, 'testAttempts');
+        const attemptsCountSnap = await getCountFromServer(testAttemptsRef);
+        const totalAttempts = attemptsCountSnap.data().count;
         
-        snap.forEach(doc => {
-          fetchedAttempts.push({ id: doc.id, ...doc.data() } as TestAttempt);
+        // Participation Rate (Attempts / Total Students)
+        setParticipationRate(studentsCount > 0 ? Math.round((totalAttempts / studentsCount) * 100) : 0);
+
+        // Average Score via Aggregate
+        const scoreAgg = await getAggregateFromServer(testAttemptsRef, {
+          avgScore: average('scorePercentage')
+        });
+        setAvgScore(Math.round(scoreAgg.data().avgScore || 0));
+
+        // 2. Activity Data (Last 7 Days) for Line Chart
+        // Fetch recent lesson progress
+        const recentLessonsQ = query(
+          collection(db, 'lessonProgress'), 
+          where('completedAt', '>=', sevenDaysAgoTimestamp)
+        );
+        const recentLessonsSnap = await getDocs(recentLessonsQ);
+        
+        // Fetch recent test attempts
+        const recentTestsQ = query(
+          collection(db, 'testAttempts'), 
+          where('submittedAt', '>=', sevenDaysAgoTimestamp)
+        );
+        const recentTestsSnap = await getDocs(recentTestsQ);
+
+        // Group active students by Date
+        const dailyActiveMap = new Map<string, Set<string>>(); // DateString -> Set of StudentIDs
+        
+        // Initialize last 7 days with empty sets
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(now.getDate() - i);
+          const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          dailyActiveMap.set(dateStr, new Set());
+        }
+
+        const addToDailyMap = (timestamp: any, studentId: string) => {
+          if (!timestamp || !timestamp.toDate) return;
+          const dateStr = timestamp.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          if (dailyActiveMap.has(dateStr)) {
+            dailyActiveMap.get(dateStr)!.add(studentId);
+          }
+        };
+
+        recentLessonsSnap.forEach(d => addToDailyMap(d.data().completedAt, d.data().studentId));
+        recentTestsSnap.forEach(d => addToDailyMap(d.data().submittedAt, d.data().studentId));
+
+        const dailyActiveArr = Array.from(dailyActiveMap.entries()).map(([date, students]) => ({
+          date,
+          activeStudents: students.size
+        }));
+        setDailyActiveData(dailyActiveArr);
+
+        // 3. Most Watched Lessons (Bar Chart)
+        // We fetch all lessonProgress to count. In production with millions of rows, this should be a backend cron job.
+        const allProgressSnap = await getDocs(collection(db, 'lessonProgress'));
+        const lessonCounts = new Map<string, number>();
+        allProgressSnap.forEach(d => {
+          const lId = d.data().lessonId;
+          lessonCounts.set(lId, (lessonCounts.get(lId) || 0) + 1);
         });
 
-        setAttempts(fetchedAttempts);
-        calculateAnalytics(fetchedAttempts);
+        // We need lesson titles. Fetch all lessons.
+        const lessonsSnap = await getDocs(collection(db, 'lessons'));
+        const lessonTitles = new Map<string, string>();
+        lessonsSnap.forEach(d => {
+          lessonTitles.set(d.id, d.data().title);
+        });
+
+        const watchedArr = Array.from(lessonCounts.entries())
+          .map(([lId, count]) => ({
+            name: lessonTitles.get(lId) || `Lesson ${lId.substring(0,4)}`,
+            views: count
+          }))
+          .sort((a, b) => b.views - a.views)
+          .slice(0, 5); // Top 5
+        setWatchedLessonsData(watchedArr);
+
+        // 4. Course Completion Rates (Pie Chart)
+        // Calculate how many courses are 100% completed vs In Progress vs Not Started
+        // For simplicity, we just look at the data we generated in progress/page.tsx, but we recreate the aggregation here.
+        const enrollSnap = await getDocs(collection(db, 'enrollments'));
+        const totalEnrollments = enrollSnap.size;
+        
+        const coursesSnap = await getDocs(collection(db, 'courses'));
+        const courseLessonCount = new Map<string, number>();
+        coursesSnap.forEach(d => courseLessonCount.set(d.id, 0));
+        lessonsSnap.forEach(d => {
+          const cId = d.data().courseId;
+          if (courseLessonCount.has(cId)) courseLessonCount.set(cId, courseLessonCount.get(cId)! + 1);
+        });
+
+        const progressMap = new Map<string, number>(); // studentId_courseId -> completed lessons
+        allProgressSnap.forEach(d => {
+          const key = `${d.data().studentId}_${d.data().courseId}`;
+          progressMap.set(key, (progressMap.get(key) || 0) + 1);
+        });
+
+        let completed = 0;
+        let inProgress = 0;
+        let notStarted = 0;
+
+        enrollSnap.forEach(d => {
+          const e = d.data();
+          const totalL = courseLessonCount.get(e.courseId) || 0;
+          const completedL = progressMap.get(`${e.studentId}_${e.courseId}`) || 0;
+          
+          if (completedL === 0) notStarted++;
+          else if (completedL >= totalL && totalL > 0) completed++;
+          else inProgress++;
+        });
+
+        setCompletionPieData([
+          { name: 'Completed', value: completed },
+          { name: 'In Progress', value: inProgress },
+          { name: 'Not Started', value: notStarted }
+        ]);
+
       } catch (error) {
-        console.error("Error fetching analytics data", error);
+        console.error("Error fetching advanced analytics", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
+
+    fetchAnalytics();
   }, []);
 
-  const calculateAnalytics = (data: TestAttempt[]) => {
-    if (data.length === 0) return;
-
-    setTotalAttempts(data.length);
-
-    // 1. Average Score
-    const totalPercentage = data.reduce((sum, item) => sum + item.scorePercentage, 0);
-    setAvgScore(Math.round(totalPercentage / data.length));
-
-    // 2. Participation per Test
-    const testCounts: Record<string, { name: string, attempts: number }> = {};
-    data.forEach(item => {
-      const title = item.testTitle || 'Unknown Test';
-      if (!testCounts[item.testId]) {
-        testCounts[item.testId] = { name: title, attempts: 0 };
-      }
-      testCounts[item.testId].attempts += 1;
-    });
-    setParticipationData(Object.values(testCounts));
-
-    // 3. Leaderboard (Highest scores)
-    // We'll group by studentId across all tests, or just show top individual attempts.
-    // Let's show top 10 individual attempts for simplicity.
-    const sortedByScore = [...data].sort((a, b) => b.scorePercentage - a.scorePercentage);
-    setLeaderboard(sortedByScore.slice(0, 10));
-  };
-
-  const handleExportCSV = () => {
-    if (attempts.length === 0) {
-      alert("No data to export");
-      return;
-    }
-
-    const headers = ['Attempt ID', 'Test Name', 'Student ID', 'Score', 'Total Score', 'Percentage', 'Date'];
-    const rows = attempts.map(a => [
-      a.id,
-      `"${a.testTitle || 'Unknown'}"`,
-      a.studentId,
-      a.score,
-      a.totalScore,
-      `${Math.round(a.scorePercentage)}%`,
-      a.submittedAt?.toDate ? `"${a.submittedAt.toDate().toLocaleString()}"` : 'Unknown'
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'student_results.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading Analytics...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-24 space-y-4">
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-500 animate-pulse">Running Firestore Aggregations...</p>
+      </div>
+    );
   }
 
+  const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Analytics & Results</h1>
-          <p className="text-slate-500 mt-2">Overview of student performance and test participation.</p>
-        </div>
-        <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700">
-          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Export CSV
-        </Button>
+    <div className="max-w-7xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Advanced Analytics</h1>
+        <p className="text-slate-500 mt-2">Deep insights powered by optimized server-side aggregations.</p>
       </div>
 
-      {attempts.length === 0 ? (
-        <Card className="text-center py-16 border-dashed border-2 bg-slate-50">
-          <CardContent>
-            <h3 className="text-xl font-bold text-slate-700">No Data Available</h3>
-            <p className="text-slate-500">Analytics will appear here once students start taking tests.</p>
+      {/* Top Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-6">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Students</p>
+            <h3 className="text-4xl font-black text-slate-900 mt-2">{totalStudents}</h3>
           </CardContent>
         </Card>
-      ) : (
-        <>
-          {/* Top Level Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-amber-50 border-amber-100 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-amber-500 text-white p-4 rounded-xl">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-amber-900/60 uppercase tracking-wider">System Average</p>
-                    <h3 className="text-4xl font-black text-amber-700">{avgScore}%</h3>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        
+        <Card className="shadow-sm border-blue-100 bg-blue-50/50">
+          <CardContent className="p-6">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wider">Avg Test Score</p>
+            <h3 className="text-4xl font-black text-blue-900 mt-2">{avgScore}%</h3>
+          </CardContent>
+        </Card>
 
-            <Card className="bg-blue-50 border-blue-100 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-blue-500 text-white p-4 rounded-xl">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-blue-900/60 uppercase tracking-wider">Total Attempts</p>
-                    <h3 className="text-4xl font-black text-blue-700">{totalAttempts}</h3>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <Card className="shadow-sm border-emerald-100 bg-emerald-50/50">
+          <CardContent className="p-6">
+            <p className="text-sm font-medium text-emerald-600 uppercase tracking-wider">Test Participation</p>
+            <h3 className="text-4xl font-black text-emerald-900 mt-2">{participationRate}%</h3>
+            <p className="text-xs text-emerald-700/70 mt-1">Attempts per student</p>
+          </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Chart */}
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle>Test Participation</CardTitle>
-                <CardDescription>Number of student attempts per test.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80 w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={participationData} margin={{ top: 5, right: 30, left: 0, bottom: 25 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 12 }} 
-                        dy={10} 
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 12 }} 
-                      />
-                      <Tooltip 
-                        cursor={{ fill: '#f1f5f9' }}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Bar dataKey="attempts" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+        <Card className="shadow-sm border-purple-100 bg-purple-50/50">
+          <CardContent className="p-6">
+            <p className="text-sm font-medium text-purple-600 uppercase tracking-wider">Weekly Actives</p>
+            <h3 className="text-4xl font-black text-purple-900 mt-2">
+              {dailyActiveData.reduce((sum, day) => sum + day.activeStudents, 0)}
+            </h3>
+            <p className="text-xs text-purple-700/70 mt-1">Unique student actions in 7 days</p>
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Leaderboard */}
-            <Card className="shadow-sm overflow-hidden flex flex-col">
-              <CardHeader className="bg-slate-50 border-b">
-                <CardTitle>Top Performances</CardTitle>
-                <CardDescription>Highest scoring test attempts.</CardDescription>
-              </CardHeader>
-              <div className="flex-1 overflow-auto max-h-80">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-white sticky top-0 shadow-sm">
-                    <tr className="text-slate-500">
-                      <th className="p-4 font-medium">Test</th>
-                      <th className="p-4 font-medium text-right">Score</th>
-                      <th className="p-4 font-medium text-right">Percentage</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {leaderboard.map((item, index) => (
-                      <tr key={index} className="hover:bg-slate-50">
-                        <td className="p-4 font-medium text-slate-900">{item.testTitle || 'Unknown'}</td>
-                        <td className="p-4 text-right text-slate-600">{item.score}/{item.totalScore}</td>
-                        <td className="p-4 text-right">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                            item.scorePercentage >= 90 ? 'bg-green-100 text-green-700' :
-                            item.scorePercentage >= 75 ? 'bg-amber-100 text-amber-700' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {Math.round(item.scorePercentage)}%
-                          </span>
-                        </td>
-                      </tr>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Line Chart: Daily Active Students */}
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Daily Active Students</CardTitle>
+            <CardDescription>Unique students completing lessons or tests.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dailyActiveData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
+                  <Line type="monotone" dataKey="activeStudents" name="Active Students" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bar Chart: Most Watched Lessons */}
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Most Watched Lessons</CardTitle>
+            <CardDescription>Top 5 lessons based on completion count.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={watchedLessonsData} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} width={120} />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="views" name="Completions" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Pie Chart: Course Completion Rates */}
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Overall Course Completion</CardTitle>
+            <CardDescription>Distribution of enrollment progress across all courses.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center items-center">
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={completionPieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    labelLine={false}
+                  >
+                    {completionPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-        </>
-      )}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
     </div>
   );
 }

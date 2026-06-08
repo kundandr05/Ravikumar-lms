@@ -136,7 +136,7 @@ export default function EnrollPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="role">Enroll As</Label>
-                  <Select value={role} onValueChange={(val: 'student' | 'parent') => setRole(val)}>
+                  <Select value={role} onValueChange={(val) => setRole(val as any)} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>

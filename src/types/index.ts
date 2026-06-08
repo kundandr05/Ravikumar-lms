@@ -66,3 +66,20 @@ export interface LessonProgress {
   completed: boolean;
   completedAt: any;
 }
+
+export interface StudyResource {
+  resourceId?: string;
+  title: string;
+  description: string;
+  category: string; // 'PDF', 'Worksheet', 'Question Bank'
+  subject: string;
+  fileUrl: string;
+  createdAt: any;
+}
+
+export interface Bookmark {
+  bookmarkId?: string;
+  studentId: string;
+  resourceId: string;
+  createdAt: any;
+}
