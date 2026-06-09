@@ -62,33 +62,6 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
     return 'document';
   };
 
-  const getVideoDuration = (file: File): Promise<number> => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      
-      const timeout = setTimeout(() => {
-        window.URL.revokeObjectURL(video.src);
-        console.warn("Video metadata timeout. Bypassing duration check.");
-        resolve(0); // Bypass check if metadata fails to load within 3 seconds
-      }, 3000);
-
-      video.onloadedmetadata = function() {
-        clearTimeout(timeout);
-        window.URL.revokeObjectURL(video.src);
-        resolve(video.duration);
-      }
-      
-      video.onerror = function() {
-        clearTimeout(timeout);
-        console.warn("Video metadata error. Bypassing duration check.");
-        resolve(0);
-      }
-      
-      video.src = URL.createObjectURL(file);
-    });
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -100,55 +73,51 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
       const file = files[i];
       const mediaType = getMediaType(file);
 
-      // STRICT 20-MINUTE VALIDATION FOR VIDEOS
-      if (mediaType === 'video') {
-        try {
-          const duration = await getVideoDuration(file);
-          if (duration > 1200) { // 1200 seconds = 20 minutes
-            alert(`Error: The video "${file.name}" is over 20 minutes long. Please split it into smaller parts.`);
-            continue; // Skip this file and move to the next
-          }
-        } catch (error) {
-          console.error("Could not determine video duration", error);
-        }
-      }
-
       const fileId = `${Date.now()}_${file.name}`;
       const storageRef = ref(storage, `courses/${courseId}/media/${fileId}`);
       
       const uploadTask = uploadBytesResumable(storageRef, file);
       
-      await new Promise<void>((resolve, reject) => {
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setUploadProgress(prev => ({ ...prev, [file.name]: progress }));
-          }, 
-          (error) => {
-            console.error("Upload error:", error);
-            reject(error);
-          }, 
-          async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            
-            const newMedia: Omit<MediaContent, 'id'> = {
-              courseId: courseId,
-              chapter: uploadChapter || 'Uncategorized',
-              title: file.name.split('.').slice(0, -1).join('.'), // filename without extension
-              type: mediaType,
-              url: downloadURL,
-              fileExtension: file.name.split('.').pop()?.toLowerCase() || '',
-              sizeBytes: file.size,
-              order: mediaList.length + i,
-              createdAt: Timestamp.now(),
-            };
-            
-            await addDoc(collection(db, 'media'), newMedia);
-            setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-            resolve();
-          }
-        );
-      });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          uploadTask.on('state_changed', 
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              setUploadProgress(prev => ({ ...prev, [file.name]: progress }));
+            }, 
+            (error) => {
+              console.error("Upload error:", error);
+              reject(error);
+            }, 
+            async () => {
+              try {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                
+                const newMedia: Omit<MediaContent, 'id'> = {
+                  courseId: courseId,
+                  chapter: uploadChapter || 'Uncategorized',
+                  title: file.name.split('.').slice(0, -1).join('.'), // filename without extension
+                  type: mediaType,
+                  url: downloadURL,
+                  fileExtension: file.name.split('.').pop()?.toLowerCase() || '',
+                  sizeBytes: file.size,
+                  order: mediaList.length + i,
+                  createdAt: Timestamp.now(),
+                };
+                
+                await addDoc(collection(db, 'media'), newMedia);
+                setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
+                resolve();
+              } catch (innerError) {
+                reject(innerError);
+              }
+            }
+          );
+        });
+      } catch (uploadError: any) {
+        console.error("Upload failed for file:", file.name, uploadError);
+        alert(`Failed to upload ${file.name}. Error: ${uploadError.message || 'Unknown error'}. Please check if Firebase Storage rules allow uploads.`);
+      }
     }
     
     setUploading(false);
