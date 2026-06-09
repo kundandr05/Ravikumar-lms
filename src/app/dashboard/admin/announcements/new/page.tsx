@@ -20,6 +20,8 @@ export default function NewAnnouncementPage() {
   const [targetAudience, setTargetAudience] = useState<string>('all');
   const [scheduledForStr, setScheduledForStr] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
+  const [sendViaEmail, setSendViaEmail] = useState(true);
+  const [sendViaWhatsApp, setSendViaWhatsApp] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -61,25 +63,39 @@ export default function NewAnnouncementPage() {
       // Only do immediate notifications if it's not scheduled for the future
       // If it's scheduled for the future, we rely on the student client checking for scheduled announcements that have become active (simplified approach since we lack a real backend cron).
       const isScheduledForFuture = scheduledForObj && scheduledForObj.toMillis() > Date.now();
-
       if (!isScheduledForFuture) {
         let userIdsToNotify: string[] = [];
+        let usersToBroadcast: any[] = [];
 
         if (targetAudience === 'all') {
           // Fetch all students
           const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
-          usersSnap.forEach(u => userIdsToNotify.push(u.id));
+          usersSnap.forEach(u => {
+            userIdsToNotify.push(u.id);
+            usersToBroadcast.push({ id: u.id, email: u.data().email, phone: u.data().phone });
+          });
         } else {
           // Fetch students enrolled in the specific course
           const enrollSnap = await getDocs(query(collection(db, 'enrollments'), where('courseId', '==', targetAudience)));
           enrollSnap.forEach(e => userIdsToNotify.push(e.data().studentId));
+          
+          // De-duplicate if needed
+          userIdsToNotify = Array.from(new Set(userIdsToNotify));
+          
+          // Fetch user details for broadcast
+          for (const uid of userIdsToNotify) {
+            const uSnap = await getDocs(query(collection(db, 'users'), where('__name__', '==', uid)));
+            if (!uSnap.empty) {
+              const uData = uSnap.docs[0].data();
+              usersToBroadcast.push({ id: uid, email: uData.email, phone: uData.phone });
+            }
+          }
         }
 
         // De-duplicate if needed
         userIdsToNotify = Array.from(new Set(userIdsToNotify));
 
         // Create notification for each user
-        // Note: For a massive scale (10,000+ users), this loop would be heavy and should be a Firebase Function.
         const notifPromises = userIdsToNotify.map(uid => 
           addDoc(collection(db, 'notifications'), {
             userId: uid,
@@ -90,7 +106,22 @@ export default function NewAnnouncementPage() {
           })
         );
         await Promise.all(notifPromises);
-      }
+
+        // Send Broadcast via Email/WhatsApp
+        if (sendViaEmail || sendViaWhatsApp) {
+          await fetch('/api/notify/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title,
+              message,
+              users: usersToBroadcast,
+              sendViaEmail,
+              sendViaWhatsApp
+            }),
+          });
+        }
+        }
 
       alert("Announcement created successfully!");
       router.push('/dashboard/admin/announcements');
@@ -166,6 +197,30 @@ export default function NewAnnouncementPage() {
                   onChange={(e) => setScheduledForStr(e.target.value)}
                 />
                 <p className="text-xs text-slate-500">Leave blank to send immediately.</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-4 border-t">
+              <Label>Delivery Channels</Label>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={sendViaEmail} 
+                    onChange={(e) => setSendViaEmail(e.target.checked)} 
+                    className="w-4 h-4"
+                  />
+                  <span>Send via Email</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={sendViaWhatsApp} 
+                    onChange={(e) => setSendViaWhatsApp(e.target.checked)} 
+                    className="w-4 h-4"
+                  />
+                  <span>Send via WhatsApp</span>
+                </label>
               </div>
             </div>
 

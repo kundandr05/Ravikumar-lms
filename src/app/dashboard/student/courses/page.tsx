@@ -91,16 +91,31 @@ export default function StudentCoursesPage() {
     }
   }
 
-  const handleEnroll = async (courseId: string) => {
-    if (!appUser?.uid || !courseId) return;
+  const handleEnroll = async (course: Course) => {
+    if (!appUser?.uid || !course.courseId) return;
     
-    setEnrollingId(courseId);
+    setEnrollingId(course.courseId);
     try {
       await addDoc(collection(db, 'enrollments'), {
         studentId: appUser.uid,
-        courseId: courseId,
+        courseId: course.courseId,
         enrolledAt: serverTimestamp(),
       });
+
+      // Send Welcome Notification
+      await fetch('/api/notify/enrollment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: appUser.name || 'Student',
+          email: appUser.email,
+          phone: (appUser as any).phone || '7019934034',
+          courseTitle: course.title,
+          sendViaEmail: true,
+          sendViaWhatsApp: true
+        })
+      });
+
       // Refresh the lists
       await fetchCoursesData();
     } catch (error) {
@@ -208,7 +223,7 @@ export default function StudentCoursesPage() {
                   <Button 
                     variant="outline"
                     className="w-full border-amber-500 text-amber-700 hover:bg-amber-50"
-                    onClick={() => course.courseId && handleEnroll(course.courseId)}
+                    onClick={() => course.courseId && handleEnroll(course)}
                     disabled={enrollingId === course.courseId}
                   >
                     {enrollingId === course.courseId ? 'Enrolling...' : 'Enroll Now'}
