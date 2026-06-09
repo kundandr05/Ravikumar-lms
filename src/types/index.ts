@@ -112,3 +112,29 @@ export interface Review {
   status: 'pending' | 'approved' | 'rejected';
   createdAt: any;
 }
+
+export type MediaType = 'video' | 'audio' | 'document' | 'image' | 'youtube';
+
+export interface MediaContent {
+  id?: string;
+  courseId: string;
+  chapter: string; // Used to group content into chapters/topics
+  title: string;
+  description?: string;
+  type: MediaType;
+  url: string; // Firebase Storage URL or YouTube URL
+  fileExtension?: string; // e.g., 'mp4', 'pdf', 'mp3'
+  sizeBytes?: number;
+  order: number;
+  createdAt: any;
+}
+
+export interface MediaProgress {
+  id?: string;
+  studentId: string;
+  mediaId: string;
+  courseId: string;
+  watchPercentage: number; // 0 to 100
+  lastViewed: any;
+  completed: boolean;
+}
