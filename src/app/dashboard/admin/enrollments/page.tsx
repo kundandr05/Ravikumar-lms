@@ -5,6 +5,7 @@ import { db } from '@/lib/firebase/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Enrollment, Course } from '@/types';
+import Link from 'next/link';
 
 interface ExtendedEnrollment extends Enrollment {
   studentName?: string;
@@ -92,7 +93,11 @@ export default function AdminEnrollmentsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {enrollments.map((enrollment) => (
                     <tr key={enrollment.enrollmentId} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">{enrollment.studentName}</td>
+                      <td className="py-4 font-medium text-slate-900">
+                        <Link href={`/dashboard/admin/students/${enrollment.studentId}`} className="hover:text-amber-600 hover:underline transition-colors">
+                          {enrollment.studentName}
+                        </Link>
+                      </td>
                       <td className="py-4 text-slate-600">{enrollment.studentEmail}</td>
                       <td className="py-4 text-slate-900 font-medium">{enrollment.courseTitle}</td>
                       <td className="py-4 text-slate-500 text-sm">

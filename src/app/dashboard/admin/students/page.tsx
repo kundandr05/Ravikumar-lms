@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 
 interface Student {
   uid: string;
@@ -77,7 +78,11 @@ export default function AdminStudentsPage() {
                 <tbody className="divide-y divide-slate-100">
                   {students.map((student) => (
                     <tr key={student.uid} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">{student.name}</td>
+                      <td className="py-4 font-medium text-slate-900">
+                        <Link href={`/dashboard/admin/students/${student.uid}`} className="hover:text-amber-600 hover:underline transition-colors">
+                          {student.name}
+                        </Link>
+                      </td>
                       <td className="py-4 text-slate-600">{student.email}</td>
                       <td className="py-4 text-slate-600">{student.phone || 'N/A'}</td>
                       <td className="py-4 text-slate-500 text-sm">
