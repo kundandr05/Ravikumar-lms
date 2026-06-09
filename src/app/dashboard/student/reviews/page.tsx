@@ -206,7 +206,7 @@ export default function StudentReviewsPage() {
                         review.status === 'rejected' ? 'bg-red-100 text-red-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
+                        {(review.status || 'pending').charAt(0).toUpperCase() + (review.status || 'pending').slice(1)}
                       </span>
                     </div>
                     <CardTitle className="text-lg">{review.title}</CardTitle>
