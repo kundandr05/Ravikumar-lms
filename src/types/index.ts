@@ -100,3 +100,15 @@ export interface Feedback {
   createdAt: any;
   updatedAt: any;
 }
+
+export interface Review {
+  id?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  title: string;
+  message: string;
+  rating: number;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+}

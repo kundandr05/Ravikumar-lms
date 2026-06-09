@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { TestimonialsCarousel } from '@/components/public/TestimonialsCarousel';
 
 export default function HomePage() {
   return (
@@ -168,6 +169,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <TestimonialsCarousel />
 
       {/* CTA Section */}
       <section className="bg-slate-900 py-20 text-center">
