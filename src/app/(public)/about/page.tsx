@@ -7,7 +7,7 @@ export default function AboutPage() {
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">About Ravi Sir</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">About Ravikumar D</h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
             A passionate educator dedicated to shaping the future of Class 10 students through innovative teaching methodologies.
           </p>
@@ -24,7 +24,7 @@ export default function AboutPage() {
           <div className="w-full md:w-2/3 space-y-6">
             <h2 className="text-2xl font-bold text-slate-900 border-b pb-2">Profile Overview</h2>
             <p className="text-slate-700 leading-relaxed">
-              With an illustrious career spanning over 17 years, Ravi Sir has established himself as a premier educator for Class 10 CBSE students. Specializing in English and Social Science, he has guided thousands of students to achieve outstanding board exam results, turning complex historical events and intricate English literature into engaging, easy-to-understand narratives.
+              With an illustrious career spanning over 17 years, Ravikumar D has established himself as a premier educator for Class 10 CBSE students. Specializing in English and Social Science, he has guided thousands of students to achieve outstanding board exam results, turning complex historical events and intricate English literature into engaging, easy-to-understand narratives.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">

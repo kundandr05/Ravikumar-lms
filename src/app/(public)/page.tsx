@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
             Master Class 10 with <br className="hidden md:block"/>
-            <span className="text-amber-600">Ravi Sir's Expert Guidance</span>
+            <span className="text-amber-600">Ravikumar's Expert Guidance</span>
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
             17+ Years of Excellence in English & Social Science. Join the premier learning platform designed to guarantee your board exam success.
@@ -25,23 +25,75 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="bg-amber-600 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
             <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white">17+</h2>
-              <p className="text-amber-100 font-medium">Years Experience</p>
+               <h2 className="text-4xl font-bold text-white">17+</h2>
+               <p className="text-amber-100 font-medium">Years Experience</p>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white">5000+</h2>
-              <p className="text-amber-100 font-medium">Students Mentored</p>
+            <div className="space-y-5">
+               <h2 className="text-4xl font-bold text-white">500+</h2>
+               <p className="text-amber-100 font-medium">Students Mentored</p>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white">100%</h2>
-              <p className="text-amber-100 font-medium">Success Rate</p>
+            <div className="space-y-5">
+               <h2 className="text-4xl font-bold text-white">2</h2>
+               <p className="text-amber-100 font-medium">Core Subjects</p>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-4xl font-bold text-white">2</h2>
-              <p className="text-amber-100 font-medium">Core Subjects</p>
+          </div>
+        </div>
+      </section>
+
+      {/* What You Get Section */}
+      <section className="bg-slate-900 py-20 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20 relative">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-full h-[1px] bg-slate-800"></div>
             </div>
+            <div className="relative inline-block bg-slate-900 px-10 py-3 border-2 border-amber-500">
+              <h2 className="text-3xl font-bold text-amber-500 tracking-wider">WHAT YOU GET</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+            {/* 1 */}
+            <div className="flex flex-col items-center text-center space-y-5">
+              <div className="w-24 h-24 rounded-full border-2 border-amber-500 flex items-center justify-center text-amber-500 mb-2 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-slate-800/50">
+                <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/><polygon fill="currentColor" points="16,14 17.5,17 21,17.5 18.5,20 19,23 16,21.5 13,23 13.5,20 11,17.5 14.5,17" /></svg>
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 uppercase tracking-widest leading-snug">Individual<br/>Attention</h3>
+              <p className="text-slate-300">Personalized learning as per your needs</p>
+            </div>
+
+            {/* 2 */}
+            <div className="flex flex-col items-center text-center space-y-5 relative">
+              <div className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-32 bg-slate-800"></div>
+              <div className="w-24 h-24 rounded-full border-2 border-amber-500 flex items-center justify-center text-amber-500 mb-2 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-slate-800/50">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polygon points="10 8 15 10 10 12 10 8" fill="currentColor"/></svg>
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 uppercase tracking-widest leading-snug">Live Interactive<br/>Sessions</h3>
+              <p className="text-slate-300">Engaging & easy to understand</p>
+            </div>
+
+            {/* 3 */}
+            <div className="flex flex-col items-center text-center space-y-5 relative">
+              <div className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-32 bg-slate-800"></div>
+              <div className="w-24 h-24 rounded-full border-2 border-amber-500 flex items-center justify-center text-amber-500 mb-2 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-slate-800/50">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 uppercase tracking-widest leading-snug">Exam Focused<br/>Preparation</h3>
+              <p className="text-slate-300 px-4">CBSE pattern, important questions & sample papers</p>
+            </div>
+
+            {/* 4 */}
+            <div className="flex flex-col items-center text-center space-y-5 relative">
+              <div className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-32 bg-slate-800"></div>
+              <div className="w-24 h-24 rounded-full border-2 border-amber-500 flex items-center justify-center text-amber-500 mb-2 shadow-[0_0_15px_rgba(245,158,11,0.2)] bg-slate-800/50">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/><polyline points="16 7 22 3 22 9"/></svg>
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 uppercase tracking-widest leading-snug">Regular Tests<br/>& Feedback</h3>
+              <p className="text-slate-300">Track your progress and improve consistently</p>
+            </div>
+
           </div>
         </div>
       </section>
@@ -59,9 +111,9 @@ export default function HomePage() {
               </div>
             </div>
             <div className="w-full md:w-1/2 space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Meet Ravi Sir</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Meet Ravikumar D</h2>
               <p className="text-lg text-slate-600 leading-relaxed">
-                With over 17 years of dedicated teaching experience, Ravi Sir has transformed the way students approach Class 10 Board Exams. Specializing in English and Social Science, his unique methodology focuses on deep conceptual clarity rather than rote memorization.
+                With over 17 years of dedicated teaching experience, Ravikumar D has transformed the way students approach Class 10 Board Exams. Specializing in English and Social Science, his unique methodology focuses on deep conceptual clarity rather than rote memorization.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-center gap-3 text-slate-700">
@@ -122,7 +174,7 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white">Ready to Secure Your Board Results?</h2>
           <p className="text-xl text-slate-300">Enroll today and get immediate access to premium video lectures, notes, and MCQ tests.</p>
-          <Link href="/enroll" className={buttonVariants({ size: "lg", className: "bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-lg px-10 py-6" })}>Enroll Now for 2026 Batch</Link>
+          <Link href="/enroll" className={buttonVariants({ size: "lg", className: "!bg-amber-500 hover:!bg-amber-600 !text-slate-900 font-bold text-lg px-10 py-6" })}>Enroll Now for 2026 Batch</Link>
         </div>
       </section>
     </div>
