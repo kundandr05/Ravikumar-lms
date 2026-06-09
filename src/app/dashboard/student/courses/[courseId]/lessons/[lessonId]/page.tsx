@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Course, Lesson } from '@/types';
@@ -41,6 +41,29 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [endingCourse, setEndingCourse] = useState(false);
+
+  const handleEndCourse = async () => {
+    if (!appUser?.uid) return;
+    setEndingCourse(true);
+    try {
+      const q = query(
+        collection(db, 'enrollments'), 
+        where('studentId', '==', appUser.uid), 
+        where('courseId', '==', courseId)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        await updateDoc(doc(db, 'enrollments', snap.docs[0].id), {
+          status: 'completed'
+        });
+      }
+      router.push(`/dashboard/student/courses?completedCourseId=${courseId}`);
+    } catch (error) {
+      console.error("Error ending course:", error);
+      setEndingCourse(false);
+    }
+  };
 
   useEffect(() => {
     async function loadLessonData() {
@@ -215,7 +238,9 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
                   Next Lesson &rarr;
                 </Link>
               ) : (
-                <Button disabled variant="secondary">End of Course</Button>
+                <Button onClick={handleEndCourse} disabled={endingCourse} variant="secondary">
+                  {endingCourse ? 'Ending...' : 'End of Course'}
+                </Button>
               )}
             </div>
           </div>

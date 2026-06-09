@@ -8,9 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Course } from '@/types';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import confetti from 'canvas-confetti';
 
 interface EnrolledCourse extends Course {
   progressPercentage?: number;
+  status?: string;
 }
 
 export default function StudentCoursesPage() {
@@ -19,10 +22,31 @@ export default function StudentCoursesPage() {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchCoursesData();
   }, [appUser]);
+
+  useEffect(() => {
+    if (searchParams.get('completedCourseId')) {
+      // Trigger confetti
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } });
+      }, 250);
+    }
+  }, [searchParams]);
 
   async function fetchCoursesData() {
     if (!appUser?.uid) return;
@@ -33,7 +57,10 @@ export default function StudentCoursesPage() {
       const enrollmentsQuery = query(collection(db, 'enrollments'), where('studentId', '==', appUser.uid));
       const enrollmentsSnap = await getDocs(enrollmentsQuery);
       
-      const enrolledCourseIds = new Set(enrollmentsSnap.docs.map(doc => doc.data().courseId));
+      const enrollmentsMap = new Map();
+      enrollmentsSnap.docs.forEach(doc => {
+        enrollmentsMap.set(doc.data().courseId, doc.data().status);
+      });
 
       // 2. Fetch ALL courses
       const coursesSnap = await getDocs(collection(db, 'courses'));
@@ -47,8 +74,8 @@ export default function StudentCoursesPage() {
       const available: Course[] = [];
 
       allCourses.forEach(course => {
-        if (enrolledCourseIds.has(course.courseId)) {
-          enrolled.push(course);
+        if (enrollmentsMap.has(course.courseId)) {
+          enrolled.push({ ...course, status: enrollmentsMap.get(course.courseId) });
         } else {
           available.push(course);
         }
@@ -180,12 +207,19 @@ export default function StudentCoursesPage() {
                     />
                   </div>
                   <p className="text-sm text-slate-600 line-clamp-2 mb-6 flex-1">{course.description}</p>
-                  <Link 
-                    href={`/dashboard/student/courses/${course.courseId}`} 
-                    className={buttonVariants({ className: "w-full bg-slate-900 hover:bg-slate-800" })}
-                  >
-                    Start Learning
-                  </Link>
+                  
+                  {course.status === 'completed' ? (
+                    <div className="w-full bg-green-100 text-green-800 font-bold py-2 px-4 rounded-md text-center text-sm border border-green-200 shadow-sm animate-pulse">
+                      🎉 Congratulations on the completion of course!
+                    </div>
+                  ) : (
+                    <Link 
+                      href={`/dashboard/student/courses/${course.courseId}`} 
+                      className={buttonVariants({ className: "w-full bg-slate-900 hover:bg-slate-800" })}
+                    >
+                      Start Learning
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             ))}
