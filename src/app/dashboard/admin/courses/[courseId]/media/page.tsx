@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { db, storage } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { MediaContent, MediaType } from '@/types';
 import Link from 'next/link';
 
-export default function CourseMediaManager({ params }: { params: { courseId: string } }) {
+export default function CourseMediaManager({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = use(params);
   const [mediaList, setMediaList] = useState<MediaContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -31,13 +32,13 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
 
   useEffect(() => {
     fetchMedia();
-  }, [params.courseId]);
+  }, [courseId]);
 
   const fetchMedia = async () => {
     try {
       const q = query(
         collection(db, 'media'), 
-        where('courseId', '==', params.courseId)
+        where('courseId', '==', courseId)
       );
       const snapshot = await getDocs(q);
       const mediaData: MediaContent[] = [];
@@ -101,7 +102,7 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
       }
 
       const fileId = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `courses/${params.courseId}/media/${fileId}`);
+      const storageRef = ref(storage, `courses/${courseId}/media/${fileId}`);
       
       const uploadTask = uploadBytesResumable(storageRef, file);
       
@@ -119,7 +120,7 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             
             const newMedia: Omit<MediaContent, 'id'> = {
-              courseId: params.courseId,
+              courseId: courseId,
               chapter: uploadChapter || 'Uncategorized',
               title: file.name.split('.').slice(0, -1).join('.'), // filename without extension
               type: mediaType,
