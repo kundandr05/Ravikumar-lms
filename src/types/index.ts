@@ -85,3 +85,18 @@ export interface Bookmark {
   resourceId: string;
   createdAt: any;
 }
+
+export interface Feedback {
+  id?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  subject: string;
+  category: string;
+  message: string;
+  rating?: number;
+  status: 'pending' | 'reviewed' | 'resolved';
+  adminReply?: string;
+  createdAt: any;
+  updatedAt: any;
+}

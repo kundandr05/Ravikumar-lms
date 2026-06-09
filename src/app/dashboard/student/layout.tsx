@@ -32,6 +32,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     { name: 'My Courses', href: '/dashboard/student/courses', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
     { name: 'My Results', href: '/dashboard/student/results', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
     { name: 'Study Materials', href: '/dashboard/student/resources', icon: 'M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z' },
+    { name: 'Reviews', href: '/dashboard/student/reviews', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
+    { name: 'Feedback Forum', href: '/dashboard/student/feedback', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
     { name: 'Profile', href: '/dashboard/student/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ];
 
@@ -46,7 +48,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 flex flex-col md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between">
           <Link href="/dashboard/student" className="text-xl font-bold text-white tracking-tight">
             Ravi<span className="text-amber-500">Classes</span>
@@ -56,7 +58,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           </button>
         </div>
 
-        <nav className="mt-6 px-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto mt-6 px-4 space-y-1 pb-4">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -75,7 +77,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           })}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-slate-800">
+        <div className="mt-auto w-full p-4 border-t border-slate-800 bg-slate-900">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
               {appUser.name?.charAt(0).toUpperCase()}

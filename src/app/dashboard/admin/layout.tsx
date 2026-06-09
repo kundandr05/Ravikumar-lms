@@ -37,6 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Progress', href: '/dashboard/admin/progress', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
     { name: 'Study Materials', href: '/dashboard/admin/resources', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
     { name: 'Reminders', href: '/dashboard/admin/reminders', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+    { name: 'Feedback Management', href: '/dashboard/admin/feedback', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
   ];
 
   return (
@@ -50,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 flex flex-col md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between">
           <Link href="/dashboard/admin" className="text-xl font-bold text-white tracking-tight">
             Ravi<span className="text-amber-500">Classes</span> Admin
@@ -60,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        <nav className="mt-6 px-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto mt-6 px-4 space-y-1 pb-4">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -79,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-slate-800">
+        <div className="mt-auto w-full p-4 border-t border-slate-800 bg-slate-900">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
               {appUser.name?.charAt(0).toUpperCase()}
