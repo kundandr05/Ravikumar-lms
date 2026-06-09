@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { db, storage } from '@/lib/firebase/firebase';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,12 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
   const [uploadChapter, setUploadChapter] = useState('Chapter 1');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Edit Modal State
+  const [editingMedia, setEditingMedia] = useState<MediaContent | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editChapter, setEditChapter] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   useEffect(() => {
     fetchMedia();
   }, [params.courseId]);
@@ -31,9 +37,7 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
     try {
       const q = query(
         collection(db, 'media'), 
-        where('courseId', '==', params.courseId),
-        // Note: orderBy requires a composite index if combined with where. 
-        // We will sort client side to avoid needing an immediate index creation.
+        where('courseId', '==', params.courseId)
       );
       const snapshot = await getDocs(q);
       const mediaData: MediaContent[] = [];
@@ -57,6 +61,21 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
     return 'document';
   };
 
+  const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = function() {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration);
+      }
+      video.onerror = function() {
+        reject("Invalid video file");
+      }
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -66,6 +85,21 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
     // Process sequentially to avoid memory issues on large videos
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const mediaType = getMediaType(file);
+
+      // STRICT 20-MINUTE VALIDATION FOR VIDEOS
+      if (mediaType === 'video') {
+        try {
+          const duration = await getVideoDuration(file);
+          if (duration > 1200) { // 1200 seconds = 20 minutes
+            alert(`Error: The video "${file.name}" is over 20 minutes long. Please split it into smaller parts.`);
+            continue; // Skip this file and move to the next
+          }
+        } catch (error) {
+          console.error("Could not determine video duration", error);
+        }
+      }
+
       const fileId = `${Date.now()}_${file.name}`;
       const storageRef = ref(storage, `courses/${params.courseId}/media/${fileId}`);
       
@@ -88,7 +122,7 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
               courseId: params.courseId,
               chapter: uploadChapter || 'Uncategorized',
               title: file.name.split('.').slice(0, -1).join('.'), // filename without extension
-              type: getMediaType(file),
+              type: mediaType,
               url: downloadURL,
               fileExtension: file.name.split('.').pop()?.toLowerCase() || '',
               sizeBytes: file.size,
@@ -113,21 +147,42 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
     if (!confirm(`Are you sure you want to delete "${media.title}"?`)) return;
     
     try {
-      // 1. Delete from Firestore
       if (media.id) {
         await deleteDoc(doc(db, 'media', media.id));
       }
-      
-      // 2. Delete from Storage if it's not a youtube link
       if (media.type !== 'youtube' && media.url.includes('firebasestorage')) {
         const fileRef = ref(storage, media.url);
-        await deleteObject(fileRef).catch(err => console.log('Storage object not found or already deleted', err));
+        await deleteObject(fileRef).catch(err => console.log('Storage object not found', err));
       }
-      
       setMediaList(prev => prev.filter(m => m.id !== media.id));
     } catch (error) {
       console.error("Error deleting media:", error);
       alert("Failed to delete media.");
+    }
+  };
+
+  const handleEditClick = (media: MediaContent) => {
+    setEditingMedia(media);
+    setEditTitle(media.title);
+    setEditChapter(media.chapter);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMedia?.id) return;
+    setSavingEdit(true);
+    try {
+      const mediaRef = doc(db, 'media', editingMedia.id);
+      await updateDoc(mediaRef, {
+        title: editTitle,
+        chapter: editChapter
+      });
+      setMediaList(prev => prev.map(m => m.id === editingMedia.id ? { ...m, title: editTitle, chapter: editChapter } : m));
+      setEditingMedia(null);
+    } catch (error) {
+      console.error("Error saving media edit:", error);
+      alert("Failed to save changes.");
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -142,6 +197,34 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Edit Modal */}
+      {editingMedia && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-white shadow-xl">
+            <CardHeader>
+              <CardTitle>Edit Content Details</CardTitle>
+              <CardDescription>Rename this part or move it to a different chapter folder.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Part Name / Title</Label>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="e.g. Part 1" />
+              </div>
+              <div className="space-y-2">
+                <Label>Chapter / Folder</Label>
+                <Input value={editChapter} onChange={(e) => setEditChapter(e.target.value)} placeholder="e.g. Chapter 1" />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1" onClick={() => setEditingMedia(null)} disabled={savingEdit}>Cancel</Button>
+                <Button className="flex-1 bg-amber-600 hover:bg-amber-700 text-white" onClick={handleSaveEdit} disabled={savingEdit}>
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
@@ -159,11 +242,11 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
           <Card>
             <CardHeader>
               <CardTitle>Upload Content</CardTitle>
-              <CardDescription>Upload videos, documents, and audio.</CardDescription>
+              <CardDescription>Upload videos, documents, and audio. Max video length: 20 mins.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Target Chapter/Topic</Label>
+                <Label>Target Chapter Folder</Label>
                 <Input 
                   value={uploadChapter} 
                   onChange={(e) => setUploadChapter(e.target.value)} 
@@ -242,11 +325,14 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
                     
                     return (
                       <div key={chapter} className="space-y-3">
-                        <h3 className="font-semibold text-slate-900 border-b pb-2">{chapter}</h3>
+                        <h3 className="font-semibold text-slate-900 border-b pb-2 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                          {chapter}
+                        </h3>
                         <div className="space-y-2">
                           {chapterMedia.map(media => (
-                            <div key={media.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg hover:border-slate-300 transition-colors">
-                              <div className="flex items-center gap-3 overflow-hidden">
+                            <div key={media.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 border rounded-lg hover:border-slate-300 transition-colors gap-4">
+                              <div className="flex items-center gap-3 overflow-hidden w-full sm:w-auto">
                                 <div className={`p-2 rounded-md flex-shrink-0 ${
                                   media.type === 'video' ? 'bg-blue-100 text-blue-600' :
                                   media.type === 'document' ? 'bg-red-100 text-red-600' :
@@ -281,6 +367,13 @@ export default function CourseMediaManager({ params }: { params: { courseId: str
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                 </a>
+                                <button 
+                                  onClick={() => handleEditClick(media)}
+                                  className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                  title="Edit Name/Chapter"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                </button>
                                 <button 
                                   onClick={() => handleDelete(media)}
                                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
