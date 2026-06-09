@@ -63,16 +63,28 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
   };
 
   const getVideoDuration = (file: File): Promise<number> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
+      
+      const timeout = setTimeout(() => {
+        window.URL.revokeObjectURL(video.src);
+        console.warn("Video metadata timeout. Bypassing duration check.");
+        resolve(0); // Bypass check if metadata fails to load within 3 seconds
+      }, 3000);
+
       video.onloadedmetadata = function() {
+        clearTimeout(timeout);
         window.URL.revokeObjectURL(video.src);
         resolve(video.duration);
       }
+      
       video.onerror = function() {
-        reject("Invalid video file");
+        clearTimeout(timeout);
+        console.warn("Video metadata error. Bypassing duration check.");
+        resolve(0);
       }
+      
       video.src = URL.createObjectURL(file);
     });
   };
