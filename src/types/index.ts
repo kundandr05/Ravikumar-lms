@@ -48,6 +48,7 @@ export interface Announcement {
   message: string;
   targetAudience: string; // 'all' or courseId
   scheduledFor?: any; // Firestore Timestamp
+  meetingLink?: string; // Optional Google Meet or Zoom link
   createdAt: any;
 }
 

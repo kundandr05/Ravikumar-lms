@@ -76,8 +76,18 @@ export default function AdminAnnouncementsPage() {
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <h3 className="font-bold text-lg text-slate-900">{ann.title}</h3>
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2">{ann.message}</p>
-                      <div className="flex gap-4 mt-3 text-xs font-medium">
+                      <p className="text-sm text-slate-500 mt-1 line-clamp-2 whitespace-pre-line">{ann.message}</p>
+                      
+                      {ann.meetingLink && (
+                        <div className="mt-3">
+                          <a href={ann.meetingLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-800 text-sm font-medium rounded-md hover:bg-amber-200 transition-colors">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            Join Live Class
+                          </a>
+                        </div>
+                      )}
+
+                      <div className="flex gap-4 mt-4 text-xs font-medium">
                         <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded">
                           Target: {ann.targetAudience === 'all' ? 'All Students' : `Course: ${ann.targetAudience}`}
                         </span>

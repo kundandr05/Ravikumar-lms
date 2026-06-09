@@ -19,6 +19,7 @@ export default function NewAnnouncementPage() {
   const [message, setMessage] = useState('');
   const [targetAudience, setTargetAudience] = useState<string>('all');
   const [scheduledForStr, setScheduledForStr] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [sendViaEmail, setSendViaEmail] = useState(true);
   const [sendViaWhatsApp, setSendViaWhatsApp] = useState(false);
@@ -51,13 +52,18 @@ export default function NewAnnouncementPage() {
       }
 
       // 1. Save Announcement
-      const annRef = await addDoc(collection(db, 'announcements'), {
+      const annData: any = {
         title,
         message,
         targetAudience,
         scheduledFor: scheduledForObj,
         createdAt: serverTimestamp(),
-      });
+      };
+      if (meetingLink.trim()) {
+        annData.meetingLink = meetingLink.trim();
+      }
+
+      const annRef = await addDoc(collection(db, 'announcements'), annData);
 
       // 2. Client-side fan-out generation of notifications
       // Only do immediate notifications if it's not scheduled for the future
@@ -100,7 +106,7 @@ export default function NewAnnouncementPage() {
           addDoc(collection(db, 'notifications'), {
             userId: uid,
             title: `New Announcement: ${title}`,
-            message,
+            message: meetingLink.trim() ? `${message}\n\nMeeting Link: ${meetingLink.trim()}` : message,
             read: false,
             createdAt: serverTimestamp(),
           })
@@ -168,6 +174,18 @@ export default function NewAnnouncementPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2 border-l-4 border-amber-500 pl-4 py-2 bg-amber-50/50 rounded-r-md">
+              <Label htmlFor="meetingLink" className="text-amber-800 font-medium">Live Class Link (Optional)</Label>
+              <Input 
+                id="meetingLink" 
+                placeholder="Paste Google Meet, Zoom, or YouTube Live link here..." 
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                className="bg-white"
+              />
+              <p className="text-xs text-amber-700/80">If provided, a shiny "Join Live Class" button will appear for students.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
