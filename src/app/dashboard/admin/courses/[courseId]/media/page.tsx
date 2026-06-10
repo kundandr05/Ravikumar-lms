@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, use } from 'react';
 import { db, storage } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +14,15 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
   const { courseId } = use(params);
   const [mediaList, setMediaList] = useState<MediaContent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [adding, setAdding] = useState(false);
+  const [newMediaTitle, setNewMediaTitle] = useState('');
+  const [newMediaUrl, setNewMediaUrl] = useState('');
+  const [newMediaType, setNewMediaType] = useState<MediaType>('document');
   
   const [chapterFilter, setChapterFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   
   const [uploadChapter, setUploadChapter] = useState('Chapter 1');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit Modal State
   const [editingMedia, setEditingMedia] = useState<MediaContent | null>(null);
@@ -55,74 +55,35 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
     }
   };
 
-  const getMediaType = (file: File): MediaType => {
-    if (file.type.startsWith('video/')) return 'video';
-    if (file.type.startsWith('audio/')) return 'audio';
-    if (file.type.startsWith('image/')) return 'image';
-    return 'document';
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
+  const handleAddMedia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMediaTitle || !newMediaUrl) return;
     
-    setUploading(true);
-    const files = Array.from(e.target.files);
+    setAdding(true);
     
-    // Process sequentially to avoid memory issues on large videos
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const mediaType = getMediaType(file);
-
-      const fileId = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `courses/${courseId}/media/${fileId}`);
+    try {
+      const newMedia: Omit<MediaContent, 'id'> = {
+        courseId: courseId,
+        chapter: uploadChapter || 'Uncategorized',
+        title: newMediaTitle,
+        type: newMediaType,
+        url: newMediaUrl,
+        fileExtension: 'link',
+        sizeBytes: 0,
+        order: mediaList.length,
+        createdAt: Timestamp.now(),
+      };
       
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      
-      try {
-        await new Promise<void>((resolve, reject) => {
-          uploadTask.on('state_changed', 
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(prev => ({ ...prev, [file.name]: progress }));
-            }, 
-            (error) => {
-              console.error("Upload error:", error);
-              reject(error);
-            }, 
-            async () => {
-              try {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                
-                const newMedia: Omit<MediaContent, 'id'> = {
-                  courseId: courseId,
-                  chapter: uploadChapter || 'Uncategorized',
-                  title: file.name.split('.').slice(0, -1).join('.'), // filename without extension
-                  type: mediaType,
-                  url: downloadURL,
-                  fileExtension: file.name.split('.').pop()?.toLowerCase() || '',
-                  sizeBytes: file.size,
-                  order: mediaList.length + i,
-                  createdAt: Timestamp.now(),
-                };
-                
-                await addDoc(collection(db, 'media'), newMedia);
-                setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-                resolve();
-              } catch (innerError) {
-                reject(innerError);
-              }
-            }
-          );
-        });
-      } catch (uploadError: any) {
-        console.error("Upload failed for file:", file.name, uploadError);
-        alert(`Failed to upload ${file.name}. Error: ${uploadError.message || 'Unknown error'}. Please check if Firebase Storage rules allow uploads.`);
-      }
+      await addDoc(collection(db, 'media'), newMedia);
+      setNewMediaTitle('');
+      setNewMediaUrl('');
+      fetchMedia();
+    } catch (error: any) {
+      console.error("Failed to add media link:", error);
+      alert(`Failed to add media. Error: ${error.message || 'Unknown error'}`);
+    } finally {
+      setAdding(false);
     }
-    
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    fetchMedia();
   };
 
   const handleDelete = async (media: MediaContent) => {
@@ -131,10 +92,6 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
     try {
       if (media.id) {
         await deleteDoc(doc(db, 'media', media.id));
-      }
-      if (media.type !== 'youtube' && media.url.includes('firebasestorage')) {
-        const fileRef = ref(storage, media.url);
-        await deleteObject(fileRef).catch(err => console.log('Storage object not found', err));
       }
       setMediaList(prev => prev.filter(m => m.id !== media.id));
     } catch (error) {
@@ -223,47 +180,60 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Upload Content</CardTitle>
-              <CardDescription>Upload videos, documents, and audio. Max video length: 20 mins.</CardDescription>
+              <CardTitle>Add Content Link</CardTitle>
+              <CardDescription>Add Google Drive links for documents or YouTube links for videos.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Target Chapter Folder</Label>
-                <Input 
-                  value={uploadChapter} 
-                  onChange={(e) => setUploadChapter(e.target.value)} 
-                  placeholder="e.g. Chapter 1: Introduction"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Files (Bulk Upload Supported)</Label>
-                <Input 
-                  type="file" 
-                  multiple 
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-              </div>
-              
-              {uploading && (
-                <div className="p-4 bg-slate-50 rounded-lg border space-y-3">
-                  <p className="text-sm font-medium text-slate-700">Uploading files...</p>
-                  {Object.entries(uploadProgress).map(([filename, progress]) => (
-                    <div key={filename} className="space-y-1">
-                      <div className="flex justify-between text-xs text-slate-500">
-                        <span className="truncate max-w-[200px]">{filename}</span>
-                        <span>{Math.round(progress)}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5">
-                        <div className="bg-amber-500 h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
+            <CardContent>
+              <form onSubmit={handleAddMedia} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Target Chapter Folder</Label>
+                  <Input 
+                    value={uploadChapter} 
+                    onChange={(e) => setUploadChapter(e.target.value)} 
+                    placeholder="e.g. Chapter 1: Introduction"
+                    required
+                  />
                 </div>
-              )}
+                
+                <div className="space-y-2">
+                  <Label>Media Title</Label>
+                  <Input 
+                    value={newMediaTitle} 
+                    onChange={(e) => setNewMediaTitle(e.target.value)} 
+                    placeholder="e.g. Important Notes PDF"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Media Type</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                    value={newMediaType}
+                    onChange={(e) => setNewMediaType(e.target.value as MediaType)}
+                  >
+                    <option value="document">Document / PDF</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="image">Image</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>URL Link</Label>
+                  <Input 
+                    type="url"
+                    value={newMediaUrl} 
+                    onChange={(e) => setNewMediaUrl(e.target.value)} 
+                    placeholder="https://drive.google.com/..."
+                    required
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700" disabled={adding}>
+                  {adding ? 'Adding...' : 'Add Media'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>

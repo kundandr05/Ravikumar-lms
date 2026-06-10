@@ -2,9 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, storage } from '@/lib/firebase/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,11 +18,10 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
   const [videoUrl, setVideoUrl] = useState('');
   const [order, setOrder] = useState<number>(1);
   const [existingPdf, setExistingPdf] = useState('');
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [notesPdfUrl, setNotesPdfUrl] = useState('');
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     async function loadLesson() {
@@ -36,6 +33,7 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
           setVideoUrl(data.videoUrl || '');
           setOrder(data.order || 1);
           setExistingPdf(data.notesPdf || '');
+          setNotesPdfUrl(data.notesPdf || '');
         } else {
           router.push(`/dashboard/admin/courses/${courseId}`);
         }
@@ -53,32 +51,6 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
     setSaving(true);
 
     try {
-      let notesPdfUrl = existingPdf;
-
-      // Handle PDF Upload if a NEW file was selected
-      if (pdfFile) {
-        const storageRef = ref(storage, `notes/${courseId}/${Date.now()}_${pdfFile.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, pdfFile);
-
-        await new Promise((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            (error) => {
-              console.error("Upload error:", error);
-              reject(error);
-            },
-            async () => {
-              notesPdfUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(null);
-            }
-          );
-        });
-      }
-
       await updateDoc(doc(db, 'lessons', lessonId), {
         title,
         videoUrl,
@@ -89,10 +61,9 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
       router.push(`/dashboard/admin/courses/${courseId}`);
     } catch (error) {
       console.error("Error updating lesson", error);
-      alert("Failed to update lesson.");
+      alert("Failed to update lesson. Please try again.");
     } finally {
       setSaving(false);
-      setUploadProgress(0);
     }
   };
 
@@ -153,29 +124,21 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
             </div>
 
             <div className="space-y-2 pt-4 border-t">
-              <Label htmlFor="pdfNotes">Update PDF Notes (Optional)</Label>
-              {existingPdf && (
-                <div className="mb-2 text-sm text-slate-600">
-                  Current PDF exists. Uploading a new file will replace it.
+              <Label htmlFor="pdfNotes">Update PDF Notes (Google Drive Link)</Label>
+              {existingPdf && existingPdf !== notesPdfUrl && (
+                <div className="mb-2 text-sm text-amber-600">
+                  Current link will be replaced with the new one.
                 </div>
               )}
               <Input 
                 id="pdfNotes" 
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setPdfFile(e.target.files[0]);
-                  }
-                }}
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={notesPdfUrl}
+                onChange={(e) => setNotesPdfUrl(e.target.value)}
               />
+              <p className="text-xs text-slate-500">Paste a link to a Google Drive PDF (make sure access is set to "Anyone with the link"). Optional.</p>
             </div>
-
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="w-full bg-slate-200 rounded-full h-2.5 mt-2">
-                <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
-              </div>
-            )}
 
             <Button type="submit" className="w-full mt-6" disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}

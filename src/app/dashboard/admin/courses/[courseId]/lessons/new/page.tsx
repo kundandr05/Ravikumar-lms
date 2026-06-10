@@ -2,9 +2,7 @@
 
 import { useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, storage } from '@/lib/firebase/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,43 +17,15 @@ export default function NewLessonPage({ params }: { params: Promise<{ courseId: 
   const [title, setTitle] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [order, setOrder] = useState<number>(1);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [notesPdfUrl, setNotesPdfUrl] = useState('');
   
   const [loading, setLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let notesPdfUrl = '';
-
-      // Handle PDF Upload if a file was selected
-      if (pdfFile) {
-        const storageRef = ref(storage, `notes/${courseId}/${Date.now()}_${pdfFile.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, pdfFile);
-
-        // Wait for upload to complete
-        await new Promise((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            (error) => {
-              console.error("Upload error:", error);
-              reject(error);
-            },
-            async () => {
-              notesPdfUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(null);
-            }
-          );
-        });
-      }
-
       // Add lesson to Firestore
       await addDoc(collection(db, 'lessons'), {
         courseId: courseId,
@@ -69,10 +39,9 @@ export default function NewLessonPage({ params }: { params: Promise<{ courseId: 
       router.push(`/dashboard/admin/courses/${courseId}`);
     } catch (error) {
       console.error("Error creating lesson", error);
-      alert("Failed to create lesson. Please ensure Storage Rules are configured.");
+      alert("Failed to create lesson. Please try again.");
     } finally {
       setLoading(false);
-      setUploadProgress(0);
     }
   };
 
@@ -131,25 +100,16 @@ export default function NewLessonPage({ params }: { params: Promise<{ courseId: 
             </div>
 
             <div className="space-y-2 pt-4 border-t">
-              <Label htmlFor="pdfNotes">Attach PDF Notes (Optional)</Label>
+              <Label htmlFor="pdfNotes">Attach PDF Notes (Google Drive Link)</Label>
               <Input 
                 id="pdfNotes" 
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setPdfFile(e.target.files[0]);
-                  }
-                }}
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={notesPdfUrl}
+                onChange={(e) => setNotesPdfUrl(e.target.value)}
               />
-              <p className="text-xs text-slate-500">Must be a PDF file. Will be uploaded to Firebase Storage.</p>
+              <p className="text-xs text-slate-500">Paste a link to a Google Drive PDF (make sure access is set to "Anyone with the link"). Optional.</p>
             </div>
-
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="w-full bg-slate-200 rounded-full h-2.5">
-                <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
-              </div>
-            )}
 
             <Button type="submit" className="w-full mt-6" disabled={loading}>
               {loading ? 'Saving...' : 'Create Lesson'}
