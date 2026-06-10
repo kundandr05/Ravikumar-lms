@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      await checkUserStatusAndRedirect(userCredential.user.uid);
+      await checkUserStatusAndRedirect(userCredential.user.uid, userCredential.user.email);
     } catch (err: any) {
       let errorMessage = err.message || 'Failed to login';
       if (err.code === 'auth/invalid-credential') {
@@ -67,7 +67,7 @@ export default function LoginPage() {
         });
         router.push('/dashboard/student');
       } else {
-        await checkUserStatusAndRedirect(user.uid);
+        await checkUserStatusAndRedirect(user.uid, user.email);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to login with Google');
@@ -76,14 +76,24 @@ export default function LoginPage() {
     }
   };
 
-  const checkUserStatusAndRedirect = async (uid: string) => {
-    const userDoc = await getDoc(doc(db, 'users', uid));
+  const checkUserStatusAndRedirect = async (uid: string, email?: string | null) => {
+    const userDocRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userDocRef);
+    
     if (userDoc.exists()) {
       const userData = userDoc.data();
       router.push(`/dashboard/${userData.role}`);
     } else {
-      setError('User data not found in database.');
-      await auth.signOut();
+      // Auto-repair: If the user exists in Firebase Auth but was deleted from Firestore Database
+      console.log("User document missing, auto-repairing...");
+      await setDoc(userDocRef, {
+        uid: uid,
+        email: email || '',
+        name: 'Recovered User',
+        role: 'student', // default to student on recovery
+        createdAt: new Date(),
+      });
+      router.push(`/dashboard/student`);
     }
   };
 
