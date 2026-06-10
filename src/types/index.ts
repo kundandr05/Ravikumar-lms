@@ -42,6 +42,31 @@ export interface Question {
   order: number;
 }
 
+export interface Assignment {
+  assignmentId?: string;
+  courseId: string;
+  title: string;
+  description: string;
+  dueDate?: any; // Firestore Timestamp
+  totalMarks: number;
+  fileUrl?: string; // Optional attachment from Admin
+  createdAt: any;
+}
+
+export interface AssignmentSubmission {
+  submissionId?: string;
+  assignmentId: string;
+  studentId: string;
+  courseId: string;
+  studentName: string;
+  submittedAt: any; // Firestore Timestamp
+  fileUrl?: string; // File uploaded by student
+  textSubmission?: string; // Text answer from student
+  status: 'pending' | 'graded';
+  marks?: number;
+  feedback?: string;
+}
+
 export interface Announcement {
   announcementId?: string;
   title: string;
