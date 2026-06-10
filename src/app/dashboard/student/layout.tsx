@@ -20,7 +20,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (!loading && (!appUser || appUser.role !== 'student')) {
-      router.push('/login');
+      router.push('/');
     }
   }, [appUser, loading, router]);
 
