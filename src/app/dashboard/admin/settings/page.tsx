@@ -15,19 +15,56 @@ export default function AdminSettingsPage() {
   const [platformName, setPlatformName] = useState('RaviClasses LMS');
   const [saved, setSaved] = useState(false);
   const [wiping, setWiping] = useState(false);
+  const [wipeStatus, setWipeStatus] = useState<string>('');
 
-  const handleWipeTestData = async () => {
-    if (!confirm("Are you sure you want to delete ALL student test attempts? This action is irreversible and should only be done before launching the website to real students.")) return;
+  const handleFactoryReset = async (type: 'student_activity' | 'students' | 'everything') => {
+    let msg = "";
+    if (type === 'student_activity') msg = "delete all enrollments, test attempts, and feedback? Your courses and student accounts will remain.";
+    if (type === 'students') msg = "delete all Student accounts? Admins will remain.";
+    if (type === 'everything') msg = "delete EVERYTHING including courses, lessons, tests, students, and enrollments? The website will be 100% blank.";
+    
+    if (!confirm(`Are you sure you want to ${msg}\n\nTHIS ACTION IS IRREVERSIBLE!`)) return;
     
     setWiping(true);
+    setWipeStatus('Preparing to wipe...');
     try {
-      const attemptsSnap = await getDocs(collection(db, 'testAttempts'));
-      const deletePromises = attemptsSnap.docs.map(d => deleteDoc(doc(db, 'testAttempts', d.id)));
-      await Promise.all(deletePromises);
-      alert(`Successfully deleted ${deletePromises.length} dummy test attempts. All test average scores are now reset to 0!`);
+      const deleteCollection = async (colName: string) => {
+        setWipeStatus(`Deleting ${colName}...`);
+        const snap = await getDocs(collection(db, colName));
+        const promises = snap.docs.map(d => deleteDoc(doc(db, colName, d.id)));
+        await Promise.all(promises);
+      };
+
+      if (type === 'student_activity' || type === 'everything') {
+        await deleteCollection('testAttempts');
+        await deleteCollection('enrollments');
+        await deleteCollection('feedback');
+      }
+
+      if (type === 'students' || type === 'everything') {
+        setWipeStatus(`Deleting student accounts...`);
+        // Cannot easily query/delete auth users from client, but we can delete their Firestore records.
+        const snap = await getDocs(collection(db, 'users'));
+        const promises = snap.docs
+          .filter(d => d.data().role !== 'admin')
+          .map(d => deleteDoc(doc(db, 'users', d.id)));
+        await Promise.all(promises);
+      }
+
+      if (type === 'everything') {
+        await deleteCollection('courses');
+        await deleteCollection('lessons');
+        await deleteCollection('tests');
+        await deleteCollection('questions');
+        await deleteCollection('announcements');
+      }
+
+      setWipeStatus('');
+      alert(`Success! The requested data has been completely wiped from the database.`);
     } catch (error) {
-      console.error("Error wiping test data:", error);
-      alert("Failed to wipe test data.");
+      console.error("Error wiping data:", error);
+      alert("Failed to wipe some data. Please check the console.");
+      setWipeStatus('');
     } finally {
       setWiping(false);
     }
@@ -110,16 +147,47 @@ export default function AdminSettingsPage() {
               Use these tools to clean up the database before handing the website over to real students.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-6 pt-6">
+            
+            {wipeStatus && (
+              <div className="bg-amber-50 text-amber-800 p-3 rounded-md font-medium animate-pulse border border-amber-200">
+                {wipeStatus}
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-red-100 rounded-lg">
               <div>
-                <h4 className="font-bold text-slate-900">Wipe Dummy Test Data</h4>
+                <h4 className="font-bold text-slate-900">1. Clear Student Activity</h4>
                 <p className="text-sm text-slate-500 max-w-xl mt-1">
-                  This will permanently delete all existing student test attempts, resetting the average scores to 0 across all courses. Only do this if you are clearing dummy data.
+                  Deletes all <b>Enrollments</b>, <b>Test Attempts</b>, and <b>Feedback</b>. Students will still exist, and Courses will remain untouched. Use this to reset progress back to 0.
                 </p>
               </div>
-              <Button variant="destructive" onClick={handleWipeTestData} disabled={wiping} className="shrink-0">
-                {wiping ? 'Wiping...' : 'Clear All Test Attempts'}
+              <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50" onClick={() => handleFactoryReset('student_activity')} disabled={wiping} className="shrink-0">
+                Wipe Activity
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-red-100 rounded-lg">
+              <div>
+                <h4 className="font-bold text-slate-900">2. Delete All Student Accounts</h4>
+                <p className="text-sm text-slate-500 max-w-xl mt-1">
+                  Deletes all Student users from the database. Admin accounts will remain intact.
+                </p>
+              </div>
+              <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50" onClick={() => handleFactoryReset('students')} disabled={wiping} className="shrink-0">
+                Wipe Students
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-red-500 bg-red-50 rounded-lg">
+              <div>
+                <h4 className="font-bold text-red-900">3. FULL FACTORY RESET (Delete Everything)</h4>
+                <p className="text-sm text-red-700 max-w-xl mt-1">
+                  Deletes <b>EVERYTHING</b>: Courses, Lessons, Tests, Announcements, Students, Enrollments, and Progress. The website will be a completely blank slate.
+                </p>
+              </div>
+              <Button variant="destructive" onClick={() => handleFactoryReset('everything')} disabled={wiping} className="shrink-0 bg-red-600 hover:bg-red-700">
+                Wipe EVERYTHING
               </Button>
             </div>
           </CardContent>
