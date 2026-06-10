@@ -84,7 +84,7 @@ export default function ContactPage() {
                     <svg className="w-6 h-6 mt-1 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                     <div>
                       <h4 className="font-bold">Email</h4>
-                      <p className="text-amber-100">kundandr05@gmail.com</p>
+                      <a href="mailto:kundandr05@gmail.com" className="text-amber-100 hover:text-white transition-colors underline-offset-4 hover:underline">kundandr05@gmail.com</a>
                     </div>
                   </div>
 
