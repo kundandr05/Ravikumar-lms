@@ -69,12 +69,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         { name: 'Feedback Forum', href: '/dashboard/student/feedback', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
         { name: 'Reviews', href: '/dashboard/student/reviews', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
       ]
-    },
-    {
-      label: 'Profile',
-      items: [
-        { name: 'Profile', href: '/dashboard/student/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-      ]
     }
   ];
 
@@ -144,7 +138,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
 
         <div className="mt-auto w-full p-4 border-t border-slate-800 bg-slate-900 shrink-0">
-          <div className="flex items-center gap-3 mb-4 px-2">
+          <Link href="/dashboard/student/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-slate-800 p-2 rounded-md transition-colors cursor-pointer block w-full" onClick={() => setIsMobileOpen(false)}>
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold shrink-0">
               {appUser.name?.charAt(0).toUpperCase() || 'S'}
             </div>
@@ -152,7 +146,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               <p className="text-sm font-medium text-white truncate">{appUser.name}</p>
               <p className="text-xs text-slate-500 truncate">Student</p>
             </div>
-          </div>
+          </Link>
           <Button variant="outline" className="w-full bg-transparent text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white" onClick={logout}>
             Log Out
           </Button>

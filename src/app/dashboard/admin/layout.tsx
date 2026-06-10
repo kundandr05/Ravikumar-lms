@@ -153,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="mt-auto w-full p-4 border-t border-slate-800 bg-slate-900 shrink-0">
-          <div className="flex items-center gap-3 mb-4 px-2">
+          <Link href="/dashboard/admin/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-slate-800 p-2 rounded-md transition-colors cursor-pointer block w-full" onClick={() => setIsMobileOpen(false)}>
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold shrink-0">
               {appUser.name?.charAt(0).toUpperCase() || 'A'}
             </div>
@@ -161,7 +161,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="text-sm font-medium text-white truncate">{appUser.name}</p>
               <p className="text-xs text-slate-500 truncate">{appUser.email}</p>
             </div>
-          </div>
+          </Link>
           <Button variant="outline" className="w-full bg-transparent text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white" onClick={logout}>
             Log Out
           </Button>
