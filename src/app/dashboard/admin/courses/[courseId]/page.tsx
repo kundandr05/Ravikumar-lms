@@ -17,7 +17,6 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,22 +53,7 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
         testsSnap.forEach(d => {
           fetchedTests.push({ testId: d.id, ...d.data() } as Test);
         });
-        setTests(fetchedTests);
-
-        // Fetch Assignments
-        const assignmentsQuery = query(
-          collection(db, 'assignments'),
-          where('courseId', '==', courseId),
-          orderBy('createdAt', 'desc')
-        );
-        const assignmentsSnap = await getDocs(assignmentsQuery);
-        const fetchedAssignments: any[] = [];
-        assignmentsSnap.forEach(d => {
-          fetchedAssignments.push({ assignmentId: d.id, ...d.data() });
-        });
-        setAssignments(fetchedAssignments);
-
-      } catch (error) {
+        setTests(fetchedTests);      } catch (error) {
         console.error("Error fetching course data:", error);
       } finally {
         setLoading(false);
@@ -226,54 +210,6 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
                 <div className="mt-6">
                   <Link href={`/dashboard/admin/courses/${courseId}/tests/${test.testId}`} className={buttonVariants({ variant: "outline", className: "w-full" })}>
                     Manage Questions
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-      {/* Assignments Section */}
-      <div className="flex justify-between items-end pt-8 border-t">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Assignments</h2>
-          <p className="text-slate-500">Manage homework and assignments for this course.</p>
-        </div>
-        <Link href={`/dashboard/admin/courses/${courseId}/assignments/new`} className={buttonVariants()}>
-          Add Assignment
-        </Link>
-      </div>
-
-      {assignments.length === 0 ? (
-        <Card className="border-dashed border-2 bg-slate-50 text-center py-12">
-          <CardContent className="space-y-4">
-            <h3 className="text-xl font-bold text-slate-700">No Assignments Yet</h3>
-            <p className="text-slate-500">Create the first assignment for your students to submit.</p>
-            <Link href={`/dashboard/admin/courses/${courseId}/assignments/new`} className={buttonVariants({ variant: "outline" })}>
-              Create First Assignment
-            </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {assignments.map((assignment) => (
-            <Card key={assignment.assignmentId} className="hover:shadow-md transition-shadow flex flex-col">
-              <CardContent className="p-6 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{assignment.title}</h3>
-                <p className="text-sm text-slate-500 line-clamp-2 flex-1">{assignment.description}</p>
-                <div className="flex items-center gap-4 text-xs text-slate-500 mt-4 font-medium bg-slate-50 p-2 rounded w-max">
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    {assignment.dueDate ? new Date(assignment.dueDate.toMillis()).toLocaleDateString() : 'No Due Date'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {assignment.totalMarks} Marks
-                  </span>
-                </div>
-                <div className="mt-6">
-                  <Link href={`/dashboard/admin/courses/${courseId}/assignments/${assignment.assignmentId}`} className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                    View Submissions
                   </Link>
                 </div>
               </CardContent>
