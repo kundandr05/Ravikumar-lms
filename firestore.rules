@@ -1,105 +1,87 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
+  
+    // Helper function to check if the user is signed in
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    // Helper function to get the user's role from the users collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     
+    // Helper function to check if the user is an admin
     function isAdmin() {
-      return isAuthenticated() && getUserData().role == 'admin';
+      return isAuthenticated() && getUserRole() == 'admin';
     }
-    
-    // Users collection
+
+    // --- Users Collection ---
+    // Anyone authenticated can read user profiles (needed for names/roles).
+    // Users can only create or update their own profile, or Admins can do it.
     match /users/{userId} {
-      // Anyone can create their user document during registration
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      // Users can read their own profile. Admins can read all.
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      // Only admins can update user roles
-      allow update: if isAdmin();
-      // No deletion for now
-      allow delete: if false;
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
     }
-    
-    // Attendance collection
-    match /attendance/{attendanceId} {
-      allow read: if isAuthenticated(); // Students/parents can read
-      allow write: if isAdmin(); // Only admins can mark attendance
-    }
-    
-    // Tests collection
-    match /tests/{testId} {
+
+    // --- Courses Collection ---
+    // Anyone authenticated can read courses. Only admins can modify.
+    match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
-    // Questions collection
-    match /questions/{questionId} {
+
+    // --- Course Subcollections (lessons, media, assignments, tests) ---
+    // Accessible to all authenticated users for reading, but only admins for writing.
+    match /courses/{courseId}/lessons/{lessonId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
-    // TestAttempts collection
+    match /courses/{courseId}/media/{mediaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /courses/{courseId}/assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /courses/{courseId}/tests/{testId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Enrollments Collection ---
+    // Students can read/create their own enrollments. Admins can manage all.
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    // --- Test Attempts Collection ---
+    // Students can create their own test attempts and read their own. Admins can read all.
     match /testAttempts/{attemptId} {
       allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
       allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
-    
-    // Courses collection
-    match /courses/{courseId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // Lessons collection
-    match /lessons/{lessonId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // Enrollments collection
-    match /enrollments/{enrollmentId} {
-      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-    
-    // Announcements collection
-    match /announcements/{announcementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // Reviews collection
+
+    // --- Reviews Collection ---
+    // Anyone can read reviews. Students can create. Admins can delete.
     match /reviews/{reviewId} {
-      allow read: if true; // Public reviews
+      allow read: if true; // Public can see reviews
       allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
-      allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
-    }
-    
-    // Contact Messages collection
-    match /contactMessages/{messageId} {
-      allow create: if true; // Public visitors can send messages
-      allow read, update, delete: if isAdmin(); // Only admins can read/manage
-    }
-    
-    // Feedback collection
-    match /feedback/{feedbackId} {
-      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
-      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
     
-    // Fallback
-    match /{document=**} {
-      allow read, write: if false;
+    // --- Contact Messages ---
+    // Anyone can create a contact message (even unauthenticated). Only admins can read/delete.
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
   }
 }

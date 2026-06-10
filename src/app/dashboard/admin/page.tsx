@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/firebase';
 import { collection, query, getDocs, where, getCountFromServer } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState({
     students: 0,
     courses: 0,
@@ -52,6 +54,18 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
         <p className="text-slate-500 mt-2">Welcome back to your administration panel.</p>
       </div>
+
+      {user && !user.emailVerified && user.providerData.some(p => p.providerId === 'password') && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg flex items-start gap-3">
+          <svg className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p className="font-semibold">Please verify your email address.</p>
+            <p className="text-sm">We sent a verification link to {user.email}. Please check your inbox.</p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

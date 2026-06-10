@@ -9,7 +9,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function StudentDashboard() {
-  const { appUser } = useAuth();
+  const { appUser, user } = useAuth();
   const [metrics, setMetrics] = useState({
     enrolledCourses: 0,
     testsTaken: 0,
@@ -60,6 +60,18 @@ export default function StudentDashboard() {
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}!</h1>
         <p className="text-slate-500 mt-2">Ready to continue your learning journey?</p>
       </div>
+
+      {user && !user.emailVerified && user.providerData.some(p => p.providerId === 'password') && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg flex items-start gap-3">
+          <svg className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p className="font-semibold">Please verify your email address.</p>
+            <p className="text-sm">We sent a verification link to {user.email}. Please check your inbox to ensure you have full access to all features.</p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LMS - Class 10",
-  description: "Learning Management System for Class 10 English and Social Science",
+  title: {
+    template: '%s | Ravi Classes',
+    default: 'Ravi Classes - CBSE Class 10 Excellence',
+  },
+  description: "Empowering CBSE Class 10 students with 17+ years of teaching excellence in English and Social Science.",
+  keywords: ["CBSE", "Class 10", "English", "Social Science", "Ravi Classes", "Online Learning", "Mysuru"],
+  openGraph: {
+    title: 'Ravi Classes',
+    description: 'Empowering CBSE Class 10 students with 17+ years of teaching excellence in English and Social Science.',
+    url: 'https://raviclasses.com',
+    siteName: 'Ravi Classes',
+    locale: 'en_IN',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

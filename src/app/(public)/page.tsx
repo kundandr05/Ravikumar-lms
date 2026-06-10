@@ -2,6 +2,12 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TestimonialsCarousel } from '@/components/public/TestimonialsCarousel';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description: 'Master Class 10 with Ravikumar\'s Expert Guidance. 17+ Years of Excellence in English & Social Science.',
+};
 
 export default function HomePage() {
   return (

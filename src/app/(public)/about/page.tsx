@@ -1,4 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About Ravi Sir',
+  description: 'Learn more about Ravikumar D, his 17+ years of teaching experience, and his proven methodology for CBSE Class 10 success.',
+};
 
 export default function AboutPage() {
   return (
