@@ -3,85 +3,124 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Helper function to check if the user is signed in
+    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Helper function to get the user's role from the users collection
     function getUserRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     
-    // Helper function to check if the user is an admin
     function isAdmin() {
       return isAuthenticated() && getUserRole() == 'admin';
     }
 
-    // --- Users Collection ---
-    // Anyone authenticated can read user profiles (needed for names/roles).
-    // Users can only create or update their own profile, or Admins can do it.
+    // --- Users ---
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
     }
 
-    // --- Courses Collection ---
-    // Anyone authenticated can read courses. Only admins can modify.
+    // --- Courses ---
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
-    // --- Course Subcollections (lessons, media, assignments, tests) ---
-    // Accessible to all authenticated users for reading, but only admins for writing.
-    match /courses/{courseId}/lessons/{lessonId} {
+    // --- Root Collections that belong to Courses ---
+    match /lessons/{lessonId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    match /courses/{courseId}/media/{mediaId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    match /courses/{courseId}/assignments/{assignmentId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    match /courses/{courseId}/tests/{testId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    // --- Enrollments Collection ---
-    // Students can read/create their own enrollments. Admins can manage all.
-    match /enrollments/{enrollmentId} {
+    
+    match /lessonProgress/{progressId} {
       allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isAdmin());
-      allow update, delete: if isAdmin();
+      allow write: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isAdmin());
     }
 
-    // --- Test Attempts Collection ---
-    // Students can create their own test attempts and read their own. Admins can read all.
+    match /media/{mediaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /mediaProgress/{progressId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow write: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isAdmin());
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /assignment_submissions/{subId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /tests/{testId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
     match /testAttempts/{attemptId} {
       allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
       allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
 
-    // --- Reviews Collection ---
-    // Anyone can read reviews. Students can create. Admins can delete.
+    // --- Enrollments ---
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated() && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    // --- Communications & Support ---
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.userId == 'all' || isAdmin());
+      allow write: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
     match /reviews/{reviewId} {
-      allow read: if true; // Public can see reviews
+      allow read: if true; 
       allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
     
-    // --- Contact Messages ---
-    // Anyone can create a contact message (even unauthenticated). Only admins can read/delete.
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    
     match /contactMessages/{messageId} {
       allow create: if true;
       allow read, update, delete: if isAdmin();
+    }
+    
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == request.resource.data.studentId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.studentId;
     }
   }
 }

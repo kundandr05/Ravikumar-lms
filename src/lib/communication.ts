@@ -1,10 +1,10 @@
 /**
  * Communication Utilities
  * 
- * This file contains functions to handle sending Emails and WhatsApp messages.
- * Currently, these are SIMULATED (mocked) and will only log to the server console.
- * To make them real, integrate Nodemailer/Resend for Email and Twilio/Meta API for WhatsApp.
+ * This file contains functions to handle sending Emails using Nodemailer
+ * and WhatsApp messages (currently simulated).
  */
+import nodemailer from 'nodemailer';
 
 export interface SendMessageOptions {
   to: string; // Email address or Phone number
@@ -13,21 +13,36 @@ export interface SendMessageOptions {
 }
 
 export async function sendEmail({ to, subject = 'Notification', body }: SendMessageOptions): Promise<boolean> {
-  // Override for testing based on user request
-  const testEmail = 'kundandr05@gmail.com';
   try {
-    // SIMULATION
-    console.log('\n==================================================');
-    console.log(`✉️  SIMULATED EMAIL SENT TO: ${testEmail} (Original: ${to})`);
-    console.log(`SUBJECT: ${subject}`);
-    console.log(`BODY: \n${body}`);
-    console.log('==================================================\n');
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // If we are missing environment variables, fallback to simulation so the app doesn't break
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn("⚠️ EMAIL_USER or EMAIL_PASS not found in .env.local! Falling back to SIMULATION.");
+      console.log(`✉️ SIMULATED EMAIL TO: ${to}\nSUBJECT: ${subject}\nBODY:\n${body}`);
+      return true;
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Ravi Classes" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text: body,
+      // You can add HTML here later if you want formatted emails
+      // html: `<p>${body.replace(/\n/g, '<br>')}</p>`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully:', info.messageId);
     return true;
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('❌ Failed to send email:', error);
     return false;
   }
 }
