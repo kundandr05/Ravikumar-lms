@@ -139,7 +139,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
       {/* Edit Modal */}
       {editingMedia && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-white shadow-xl">
+          <Card className="w-full max-w-md bg-card text-card-foreground shadow-xl">
             <CardHeader>
               <CardTitle>Edit Content Details</CardTitle>
               <CardDescription>Rename this part or move it to a different chapter folder.</CardDescription>
@@ -166,12 +166,12 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Link href="/dashboard/admin/courses" className="hover:text-amber-600 transition-colors">Courses</Link>
             <span>/</span>
             <span>Course Media</span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Media Manager</h1>
+          <h1 className="text-3xl font-bold text-foreground">Media Manager</h1>
         </div>
       </div>
 
@@ -208,7 +208,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                 <div className="space-y-2">
                   <Label>Media Type</Label>
                   <select 
-                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-card text-card-foreground px-3 py-2 text-sm"
                     value={newMediaType}
                     onChange={(e) => setNewMediaType(e.target.value as MediaType)}
                   >
@@ -251,7 +251,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                   className="w-full sm:w-48"
                 />
                 <select 
-                  className="border rounded-md px-3 py-2 text-sm bg-white"
+                  className="border rounded-md px-3 py-2 text-sm bg-card text-card-foreground"
                   value={chapterFilter}
                   onChange={(e) => setChapterFilter(e.target.value)}
                 >
@@ -264,9 +264,9 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
             </CardHeader>
             <CardContent className="pt-6">
               {loading ? (
-                <div className="text-center py-8 text-slate-500">Loading media...</div>
+                <div className="text-center py-8 text-muted-foreground">Loading media...</div>
               ) : filteredMedia.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed rounded-lg text-slate-500">
+                <div className="text-center py-12 border-2 border-dashed rounded-lg text-muted-foreground">
                   No media content found for this course.
                 </div>
               ) : (
@@ -277,19 +277,19 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                     
                     return (
                       <div key={chapter} className="space-y-3">
-                        <h3 className="font-semibold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground border-b pb-2 flex items-center gap-2">
                           <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                           {chapter}
                         </h3>
                         <div className="space-y-2">
                           {chapterMedia.map(media => (
-                            <div key={media.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 border rounded-lg hover:border-slate-300 transition-colors gap-4">
+                            <div key={media.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-muted/50 border rounded-lg hover:border-slate-300 transition-colors gap-4">
                               <div className="flex items-center gap-3 overflow-hidden w-full sm:w-auto">
                                 <div className={`p-2 rounded-md flex-shrink-0 ${
                                   media.type === 'video' ? 'bg-blue-100 text-blue-600' :
                                   media.type === 'document' ? 'bg-red-100 text-red-600' :
                                   media.type === 'audio' ? 'bg-purple-100 text-purple-600' :
-                                  'bg-slate-200 text-slate-600'
+                                  'bg-slate-200 text-muted-foreground'
                                 }`}>
                                   {media.type === 'video' && (
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -305,8 +305,8 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                                   )}
                                 </div>
                                 <div className="truncate">
-                                  <p className="font-medium text-slate-900 truncate">{media.title}</p>
-                                  <p className="text-xs text-slate-500 uppercase">{media.fileExtension || media.type}</p>
+                                  <p className="font-medium text-foreground truncate">{media.title}</p>
+                                  <p className="text-xs text-muted-foreground uppercase">{media.fileExtension || media.type}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
@@ -314,21 +314,21 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                                   href={media.url} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                   title="Preview"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                 </a>
                                 <button 
                                   onClick={() => handleEditClick(media)}
-                                  className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                  className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                                   title="Edit Name/Chapter"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(media)}
-                                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                   title="Delete"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

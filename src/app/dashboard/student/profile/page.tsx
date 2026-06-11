@@ -63,8 +63,8 @@ export default function StudentProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-        <p className="text-slate-500 mt-2">Manage your personal information.</p>
+        <h1 className="text-3xl font-bold text-foreground">My Profile</h1>
+        <p className="text-muted-foreground mt-2">Manage your personal information.</p>
       </div>
 
       <Card>
@@ -79,9 +79,9 @@ export default function StudentProfilePage() {
                 id="email" 
                 value={appUser?.email || ''} 
                 disabled 
-                className="bg-slate-50 text-slate-500"
+                className="bg-muted/50 text-muted-foreground"
               />
-              <p className="text-xs text-slate-400">Email cannot be changed.</p>
+              <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
             </div>
 
             <div className="space-y-2">

@@ -11,12 +11,12 @@ export default function ResultsPage() {
   ];
 
   return (
-    <div className="py-20 bg-slate-50 min-h-screen">
+    <div className="py-20 bg-muted/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Our Hall of Fame</h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">Our Hall of Fame</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Consistent 100% success rate with top scorers in CBSE Class 10 Board Exams year after year.
           </p>
         </div>
@@ -41,21 +41,21 @@ export default function ResultsPage() {
 
         {/* Toppers Grid */}
         <div className="space-y-8">
-          <h3 className="text-3xl font-bold text-slate-900 text-center">Recent Top Performers</h3>
+          <h3 className="text-3xl font-bold text-foreground text-center">Recent Top Performers</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {toppers.map((topper, idx) => (
               <Card key={idx} className="border-t-4 border-t-slate-800 text-center hover:-translate-y-1 transition-transform">
                 <CardContent className="p-8 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-200 mx-auto flex items-center justify-center text-slate-500">
+                  <div className="w-16 h-16 rounded-full bg-slate-200 mx-auto flex items-center justify-center text-muted-foreground">
                     <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-slate-900">{topper.name}</h4>
-                    <p className="text-sm text-slate-500">Class of {topper.year}</p>
+                    <h4 className="text-xl font-bold text-foreground">{topper.name}</h4>
+                    <p className="text-sm text-muted-foreground">Class of {topper.year}</p>
                   </div>
                   <div className="pt-4 border-t border-slate-100">
                     <span className="text-3xl font-black text-amber-600">{topper.score}</span>
-                    <p className="text-sm font-medium text-slate-700">{topper.subject}</p>
+                    <p className="text-sm font-medium text-foreground">{topper.subject}</p>
                   </div>
                 </CardContent>
               </Card>

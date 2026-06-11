@@ -100,8 +100,8 @@ export default function AdminRemindersPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Communication & Reminders</h1>
-        <p className="text-slate-500 mt-2">Send automated reminders for fees, tests, and assignments.</p>
+        <h1 className="text-3xl font-bold text-foreground">Communication & Reminders</h1>
+        <p className="text-muted-foreground mt-2">Send automated reminders for fees, tests, and assignments.</p>
       </div>
 
       <Card>

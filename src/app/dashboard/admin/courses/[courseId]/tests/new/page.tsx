@@ -93,7 +93,7 @@ export default function NewTestPage({ params }: { params: Promise<{ courseId: st
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Number(e.target.value))}
               />
-              <p className="text-xs text-slate-500">The test will automatically submit when the timer expires.</p>
+              <p className="text-xs text-muted-foreground">The test will automatically submit when the timer expires.</p>
             </div>
 
             <Button type="submit" className="w-full mt-6" disabled={loading}>

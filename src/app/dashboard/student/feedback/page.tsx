@@ -110,8 +110,8 @@ export default function StudentFeedbackPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Feedback Forum</h1>
-          <p className="text-slate-500 mt-2">Submit your feedback, suggestions, or report issues directly to the admin.</p>
+          <h1 className="text-3xl font-bold text-foreground">Feedback Forum</h1>
+          <p className="text-muted-foreground mt-2">Submit your feedback, suggestions, or report issues directly to the admin.</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} className="bg-amber-600 hover:bg-amber-700">
           {showForm ? 'Cancel' : 'Submit New Feedback'}
@@ -127,17 +127,17 @@ export default function StudentFeedbackPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Category</label>
+                  <label className="text-sm font-medium text-foreground">Category</label>
                   <select 
                     value={category} 
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2 border rounded-md bg-white focus:ring-2 focus:ring-amber-500"
+                    className="w-full p-2 border rounded-md bg-card text-card-foreground focus:ring-2 focus:ring-amber-500"
                   >
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Subject</label>
+                  <label className="text-sm font-medium text-foreground">Subject</label>
                   <input 
                     type="text" 
                     required
@@ -150,7 +150,7 @@ export default function StudentFeedbackPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Message</label>
+                <label className="text-sm font-medium text-foreground">Message</label>
                 <textarea 
                   required
                   value={message}
@@ -162,9 +162,9 @@ export default function StudentFeedbackPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
                   Rating (Optional)
-                  <span className="text-xs text-slate-400 font-normal">How would you rate your experience?</span>
+                  <span className="text-xs text-muted-foreground font-normal">How would you rate your experience?</span>
                 </label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -184,7 +184,7 @@ export default function StudentFeedbackPage() {
                     </button>
                   ))}
                   {rating > 0 && (
-                    <button type="button" onClick={() => setRating(0)} className="text-xs text-slate-400 hover:text-slate-600 ml-2">Clear</button>
+                    <button type="button" onClick={() => setRating(0)} className="text-xs text-muted-foreground hover:text-muted-foreground ml-2">Clear</button>
                   )}
                 </div>
               </div>
@@ -200,13 +200,13 @@ export default function StudentFeedbackPage() {
       )}
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900">Your Past Feedback</h2>
+        <h2 className="text-xl font-bold text-foreground">Your Past Feedback</h2>
         
         {loading ? (
-          <p className="text-slate-500 text-center py-8">Loading history...</p>
+          <p className="text-muted-foreground text-center py-8">Loading history...</p>
         ) : feedbacks.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="p-12 text-center text-slate-500">
+            <CardContent className="p-12 text-center text-muted-foreground">
               <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
@@ -217,10 +217,10 @@ export default function StudentFeedbackPage() {
           <div className="grid gap-4">
             {feedbacks.map(fb => (
               <Card key={fb.id} className="overflow-hidden">
-                <CardHeader className="bg-slate-50 border-b pb-4 flex flex-row justify-between items-start">
+                <CardHeader className="bg-muted/50 border-b pb-4 flex flex-row justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{fb.category}</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{fb.category}</span>
                       {fb.rating ? (
                         <span className="flex items-center text-amber-500 text-xs">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
@@ -228,16 +228,16 @@ export default function StudentFeedbackPage() {
                         </span>
                       ) : null}
                     </div>
-                    <CardTitle className="text-lg text-slate-900">{fb.subject}</CardTitle>
+                    <CardTitle className="text-lg text-foreground">{fb.subject}</CardTitle>
                   </div>
                   <span className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase ${getStatusColor(fb.status)}`}>
                     {fb.status}
                   </span>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
-                  <p className="text-slate-700 whitespace-pre-wrap text-sm">{fb.message}</p>
+                  <p className="text-foreground whitespace-pre-wrap text-sm">{fb.message}</p>
                   
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-muted-foreground">
                     Submitted on {fb.createdAt?.toDate ? fb.createdAt.toDate().toLocaleString() : 'Unknown'}
                   </div>
 

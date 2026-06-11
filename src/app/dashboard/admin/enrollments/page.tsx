@@ -63,8 +63,8 @@ export default function AdminEnrollmentsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Enrollments</h1>
-        <p className="text-slate-500 mt-2">Track which students are enrolled in which courses.</p>
+        <h1 className="text-3xl font-bold text-foreground">Enrollments</h1>
+        <p className="text-muted-foreground mt-2">Track which students are enrolled in which courses.</p>
       </div>
 
       <Card>
@@ -73,16 +73,16 @@ export default function AdminEnrollmentsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-center py-8">Loading enrollments...</p>
+            <p className="text-muted-foreground text-center py-8">Loading enrollments...</p>
           ) : enrollments.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 border rounded-lg border-dashed">
+            <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
               No enrollments found.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b text-sm text-slate-500">
+                  <tr className="border-b text-sm text-muted-foreground">
                     <th className="pb-3 font-medium">Student Name</th>
                     <th className="pb-3 font-medium">Email</th>
                     <th className="pb-3 font-medium">Course Title</th>
@@ -92,15 +92,15 @@ export default function AdminEnrollmentsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {enrollments.map((enrollment) => (
-                    <tr key={enrollment.enrollmentId} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">
+                    <tr key={enrollment.enrollmentId} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-4 font-medium text-foreground">
                         <Link href={`/dashboard/admin/students/${enrollment.studentId}`} className="hover:text-amber-600 hover:underline transition-colors">
                           {enrollment.studentName}
                         </Link>
                       </td>
-                      <td className="py-4 text-slate-600">{enrollment.studentEmail}</td>
-                      <td className="py-4 text-slate-900 font-medium">{enrollment.courseTitle}</td>
-                      <td className="py-4 text-slate-500 text-sm">
+                      <td className="py-4 text-muted-foreground">{enrollment.studentEmail}</td>
+                      <td className="py-4 text-foreground font-medium">{enrollment.courseTitle}</td>
+                      <td className="py-4 text-muted-foreground text-sm">
                         {enrollment.enrolledAt?.toDate ? enrollment.enrolledAt.toDate().toLocaleDateString() : 'Unknown'}
                       </td>
                       <td className="py-4">

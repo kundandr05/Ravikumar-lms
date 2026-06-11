@@ -71,7 +71,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-muted/50 flex">
       {/* Mobile Sidebar Overlay */}
       {isMobileOpen && (
         <div 
@@ -81,15 +81,15 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 flex flex-col md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 flex items-center justify-between">
+      <aside className={`fixed inset-y-0 left-0 bg-card border-r text-card-foreground transition-transform z-50 flex flex-col md:translate-x-0 md:static w-64 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 flex items-center justify-between border-b">
           <Link href="/dashboard/student" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />
-            <span className="text-xl font-bold text-white tracking-tight">
+            <span className="text-xl font-bold text-foreground tracking-tight">
               Ravi<span className="text-amber-500">Classes</span>
             </span>
           </Link>
-          <button className="md:hidden text-slate-300 hover:text-white p-1 rounded-md hover:bg-slate-800" onClick={() => setIsMobileOpen(false)}>
+          <button className="md:hidden text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted" onClick={() => setIsMobileOpen(false)}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -104,7 +104,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 {isCollapsible && (
                   <button
                     onClick={() => toggleGroup(group.label)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                   >
                     {group.label}
                     <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,10 +121,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                         <Link 
                           key={item.name}
                           href={item.href}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-amber-600 text-white shadow-sm' : 'hover:bg-slate-800 hover:text-slate-100'}`}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-amber-600 text-white shadow-sm' : 'hover:bg-accent hover:text-accent-foreground'}`}
                           onClick={() => setIsMobileOpen(false)}
                         >
-                          <svg className={`w-5 h-5 shrink-0 ${isActive ? 'text-amber-100' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className={`w-5 h-5 shrink-0 ${isActive ? 'text-amber-100' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                           </svg>
                           {item.name}
@@ -138,38 +138,38 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           })}
         </div>
 
-        <div className="mt-auto w-full p-4 border-t border-slate-800 bg-slate-900 shrink-0">
-          <Link href="/dashboard/student/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-slate-800 p-2 rounded-md transition-colors cursor-pointer block w-full" onClick={() => setIsMobileOpen(false)}>
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold shrink-0">
+        <div className="mt-auto w-full p-4 border-t bg-card shrink-0">
+          <Link href="/dashboard/student/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-accent p-2 rounded-md transition-colors cursor-pointer block w-full" onClick={() => setIsMobileOpen(false)}>
+            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-foreground font-bold shrink-0">
               {appUser.name?.charAt(0).toUpperCase() || 'S'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-medium text-white truncate">{appUser.name}</p>
-              <p className="text-xs text-slate-500 truncate">Student</p>
+              <p className="text-sm font-medium text-foreground truncate">{appUser.name}</p>
+              <p className="text-xs text-muted-foreground truncate">Student</p>
             </div>
           </Link>
-          <Link href="/dashboard/student/settings" className="flex items-center justify-center gap-2 w-full mb-2 py-2 px-4 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border border-transparent hover:border-slate-700">
+          <Link href="/dashboard/student/settings" className="flex items-center justify-center gap-2 w-full mb-2 py-2 px-4 rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors border border-transparent hover:border-border">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             Settings & Support
           </Link>
-          <Button variant="outline" className="w-full bg-transparent text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white" onClick={logout}>
+          <Button variant="outline" className="w-full bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground" onClick={logout}>
             Log Out
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/50">
         {/* Top Header */}
-        <header className="bg-white border-b h-16 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-10">
+        <header className="bg-card text-card-foreground border-b h-16 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsMobileOpen(true)} className="md:hidden text-slate-600 focus:outline-none p-2 rounded-md hover:bg-slate-100">
+            <button onClick={() => setIsMobileOpen(true)} className="md:hidden text-muted-foreground focus:outline-none p-2 rounded-md hover:bg-muted">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div className="font-bold text-slate-900 md:hidden">Student Dashboard</div>
-            <div className="hidden md:block font-medium text-slate-500">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}</div>
+            <div className="font-bold text-foreground md:hidden">Student Dashboard</div>
+            <div className="hidden md:block font-medium text-muted-foreground">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}</div>
           </div>
           <div className="flex items-center">
             <NotificationBell />

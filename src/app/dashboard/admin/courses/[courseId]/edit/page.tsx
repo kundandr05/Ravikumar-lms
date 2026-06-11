@@ -67,7 +67,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ courseId:
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading course...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading course...</div>;
   }
 
   return (
@@ -115,7 +115,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ courseId:
                 value={thumbnail}
                 onChange={(e) => setThumbnail(e.target.value)}
               />
-              <p className="text-xs text-slate-500">Provide a direct URL to an image.</p>
+              <p className="text-xs text-muted-foreground">Provide a direct URL to an image.</p>
             </div>
 
             <Button type="submit" className="w-full" disabled={saving}>

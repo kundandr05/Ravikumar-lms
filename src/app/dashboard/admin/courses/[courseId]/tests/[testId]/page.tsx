@@ -80,7 +80,7 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading test...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading test...</div>;
   }
 
   if (!testData) {
@@ -103,7 +103,7 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
             </div>
             <div className="bg-slate-800 px-4 py-2 rounded-lg text-center">
               <span className="block text-2xl font-bold text-amber-500">{testData.durationMinutes}</span>
-              <span className="text-xs text-slate-400 uppercase tracking-wider">Minutes</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Minutes</span>
             </div>
           </div>
         </CardContent>
@@ -111,8 +111,8 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
 
       <div className="flex justify-between items-end pt-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Questions</h2>
-          <p className="text-slate-500">Add or manage questions for this test.</p>
+          <h2 className="text-2xl font-bold text-foreground">Questions</h2>
+          <p className="text-muted-foreground">Add or manage questions for this test.</p>
         </div>
         <Link href={`/dashboard/admin/courses/${courseId}/tests/${testId}/questions/new`} className={buttonVariants()}>
           Add Question
@@ -120,10 +120,10 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
       </div>
 
       {questions.length === 0 ? (
-        <Card className="border-dashed border-2 bg-slate-50 text-center py-12">
+        <Card className="border-dashed border-2 bg-muted/50 text-center py-12">
           <CardContent className="space-y-4">
-            <h3 className="text-xl font-bold text-slate-700">No Questions Yet</h3>
-            <p className="text-slate-500">Start building your test by adding multiple-choice questions.</p>
+            <h3 className="text-xl font-bold text-foreground">No Questions Yet</h3>
+            <p className="text-muted-foreground">Start building your test by adding multiple-choice questions.</p>
             <Link href={`/dashboard/admin/courses/${courseId}/tests/${testId}/questions/new`} className={buttonVariants({ variant: "outline" })}>
               Add First Question
             </Link>
@@ -136,16 +136,16 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
               <CardContent className="p-6">
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex gap-4">
-                    <div className="bg-slate-100 text-slate-700 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                    <div className="bg-muted text-foreground font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                       {q.order}
                     </div>
                     <div>
-                      <h4 className="font-medium text-slate-900 text-lg mb-4">{q.text}</h4>
+                      <h4 className="font-medium text-foreground text-lg mb-4">{q.text}</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {q.options.map((opt, index) => (
                           <div 
                             key={index} 
-                            className={`p-3 rounded border text-sm ${index === q.correctOptionIndex ? 'bg-green-50 border-green-200 font-medium text-green-900' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
+                            className={`p-3 rounded border text-sm ${index === q.correctOptionIndex ? 'bg-green-50 border-green-200 font-medium text-green-900' : 'bg-muted/50 border-slate-200 text-foreground'}`}
                           >
                             <span className="mr-2 opacity-50">{String.fromCharCode(65 + index)}.</span>
                             {opt}

@@ -82,27 +82,27 @@ export default function EnrollPage() {
   };
 
   return (
-    <div className="py-20 bg-slate-50 min-h-screen flex items-center justify-center">
+    <div className="py-20 bg-muted/50 min-h-screen flex items-center justify-center">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col lg:flex-row gap-12 items-center">
         
         {/* Marketing Left Side */}
         <div className="w-full lg:w-1/2 space-y-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
             Secure Your Spot in the Next Batch
           </h1>
-          <p className="text-xl text-slate-600">
+          <p className="text-xl text-muted-foreground">
             Join thousands of students who have achieved 95%+ in their CBSE Class 10 Board Exams with Ravi Sir.
           </p>
           <ul className="space-y-4">
-            <li className="flex items-center gap-3 text-lg text-slate-700 font-medium">
+            <li className="flex items-center gap-3 text-lg text-foreground font-medium">
               <svg className="w-6 h-6 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Complete access to premium video lectures
             </li>
-            <li className="flex items-center gap-3 text-lg text-slate-700 font-medium">
+            <li className="flex items-center gap-3 text-lg text-foreground font-medium">
               <svg className="w-6 h-6 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Downloadable chapter-wise PDF notes
             </li>
-            <li className="flex items-center gap-3 text-lg text-slate-700 font-medium">
+            <li className="flex items-center gap-3 text-lg text-foreground font-medium">
               <svg className="w-6 h-6 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
               Regular MCQ tests and performance tracking
             </li>
@@ -114,8 +114,8 @@ export default function EnrollPage() {
           <Card className="shadow-2xl border-0">
             <CardContent className="p-8">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-slate-900">Student Enrollment Form</h3>
-                <p className="text-slate-500">Create your account to start learning</p>
+                <h3 className="text-2xl font-bold text-foreground">Student Enrollment Form</h3>
+                <p className="text-muted-foreground">Create your account to start learning</p>
               </div>
 
               <form onSubmit={handleRegister} className="space-y-4">
@@ -164,7 +164,7 @@ export default function EnrollPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-slate-500">Or quickly sign up with</span>
+                  <span className="bg-card text-card-foreground px-2 text-muted-foreground">Or quickly sign up with</span>
                 </div>
               </div>
               
@@ -173,7 +173,7 @@ export default function EnrollPage() {
                 Continue with Google
               </Button>
               
-              <div className="mt-6 text-center text-sm text-slate-500">
+              <div className="mt-6 text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
                 <Link href="/login" className="text-amber-600 hover:underline font-medium">
                   Login here

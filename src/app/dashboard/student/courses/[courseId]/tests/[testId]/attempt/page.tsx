@@ -124,7 +124,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Preparing your test environment...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Preparing your test environment...</div>;
   }
 
   if (!testData || questions.length === 0) {
@@ -147,7 +147,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
       <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-white p-4 flex justify-between items-center px-6">
         <div>
           <h2 className="font-bold text-lg">{testData.title}</h2>
-          <p className="text-xs text-slate-400">{questions.length} Questions</p>
+          <p className="text-xs text-muted-foreground">{questions.length} Questions</p>
         </div>
         <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold ${isLowTime ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-slate-800 text-slate-200'}`}>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -159,8 +159,8 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         {questions.map((q, index) => (
           <Card key={q.questionId} className="border-slate-200 shadow-sm" id={`q-${q.questionId}`}>
             <CardContent className="p-6 md:p-8">
-              <h3 className="text-lg font-medium text-slate-900 mb-6">
-                <span className="text-slate-400 font-bold mr-3">{index + 1}.</span>
+              <h3 className="text-lg font-medium text-foreground mb-6">
+                <span className="text-muted-foreground font-bold mr-3">{index + 1}.</span>
                 {q.text}
               </h3>
               
@@ -174,7 +174,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
                       className={`w-full text-left p-4 rounded-lg border transition-all flex items-center gap-4 ${
                         isSelected 
                           ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500' 
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          : 'border-slate-200 hover:border-slate-300 hover:bg-muted/50'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
@@ -182,7 +182,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
                       }`}>
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
                       </div>
-                      <span className={`text-sm md:text-base ${isSelected ? 'text-amber-900 font-medium' : 'text-slate-700'}`}>
+                      <span className={`text-sm md:text-base ${isSelected ? 'text-amber-900 font-medium' : 'text-foreground'}`}>
                         {opt}
                       </span>
                     </button>
@@ -194,9 +194,9 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card text-card-foreground border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="text-sm text-slate-500 font-medium">
+          <div className="text-sm text-muted-foreground font-medium">
             Answered: {Object.keys(answers).length} of {questions.length}
           </div>
           <Button 

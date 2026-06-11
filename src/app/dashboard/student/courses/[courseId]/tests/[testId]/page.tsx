@@ -60,14 +60,14 @@ export default function StudentPreTestPage({ params }: { params: Promise<{ cours
   }, [courseId, testId, appUser]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading test details...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading test details...</div>;
   }
 
   if (!isEnrolled) {
     return (
       <div className="p-8 text-center max-w-lg mx-auto mt-12 space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
-        <p className="text-slate-600">You must be enrolled in this course to take this test.</p>
+        <h2 className="text-2xl font-bold text-foreground">Access Denied</h2>
+        <p className="text-muted-foreground">You must be enrolled in this course to take this test.</p>
         <Link href="/courses" className={buttonVariants()}>Browse Public Courses</Link>
       </div>
     );
@@ -90,27 +90,27 @@ export default function StudentPreTestPage({ params }: { params: Promise<{ cours
         </div>
         <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <span className="block text-2xl font-bold text-slate-900">{questionCount}</span>
-              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Questions</span>
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <span className="block text-2xl font-bold text-foreground">{questionCount}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Questions</span>
             </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <span className="block text-2xl font-bold text-slate-900">{testData.durationMinutes}</span>
-              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Minutes</span>
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <span className="block text-2xl font-bold text-foreground">{testData.durationMinutes}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Minutes</span>
             </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <span className="block text-2xl font-bold text-slate-900">{questionCount}</span>
-              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Max Score</span>
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <span className="block text-2xl font-bold text-foreground">{questionCount}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Max Score</span>
             </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <span className="block text-2xl font-bold text-slate-900">MCQ</span>
-              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Format</span>
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <span className="block text-2xl font-bold text-foreground">MCQ</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Format</span>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-bold text-slate-900 text-lg border-b pb-2">Important Instructions</h3>
-            <ul className="space-y-2 text-slate-600 text-sm">
+            <h3 className="font-bold text-foreground text-lg border-b pb-2">Important Instructions</h3>
+            <ul className="space-y-2 text-muted-foreground text-sm">
               <li className="flex gap-2">
                 <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 The timer will start as soon as you click the button below. It cannot be paused.

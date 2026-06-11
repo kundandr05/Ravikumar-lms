@@ -84,7 +84,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ courseI
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading question...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading question...</div>;
   }
 
   return (
@@ -129,7 +129,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ courseI
               <Label>Options</Label>
               {options.map((opt, index) => (
                 <div key={index} className="flex items-center gap-4">
-                  <span className="font-medium text-slate-500 w-6">
+                  <span className="font-medium text-muted-foreground w-6">
                     {String.fromCharCode(65 + index)}.
                   </span>
                   <Input 

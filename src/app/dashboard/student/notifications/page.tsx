@@ -67,7 +67,7 @@ export default function StudentNotificationsPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading notifications...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading notifications...</div>;
   }
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -76,8 +76,8 @@ export default function StudentNotificationsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-          <p className="text-slate-500 mt-2">Stay updated with the latest announcements.</p>
+          <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
+          <p className="text-muted-foreground mt-2">Stay updated with the latest announcements.</p>
         </div>
         {unreadCount > 0 && (
           <Button variant="outline" onClick={handleMarkAllAsRead}>
@@ -95,7 +95,7 @@ export default function StudentNotificationsPage() {
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 text-slate-500">
+            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/50 text-muted-foreground">
               <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
               You're all caught up! No notifications yet.
             </div>
@@ -106,14 +106,14 @@ export default function StudentNotificationsPage() {
                   key={notif.notificationId} 
                   className={`p-5 rounded-lg border transition-all ${
                     notif.read 
-                      ? 'bg-slate-50 border-slate-200' 
-                      : 'bg-white border-amber-200 shadow-sm ring-1 ring-amber-500/20'
+                      ? 'bg-muted/50 border-slate-200' 
+                      : 'bg-card text-card-foreground border-amber-200 shadow-sm ring-1 ring-amber-500/20'
                   }`}
                 >
                   <div className="flex gap-4">
                     <div className="shrink-0 mt-1">
                       {notif.read ? (
-                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-muted-foreground">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         </div>
                       ) : (
@@ -125,14 +125,14 @@ export default function StudentNotificationsPage() {
                     
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <h3 className={`font-bold ${notif.read ? 'text-slate-700' : 'text-slate-900'}`}>
+                        <h3 className={`font-bold ${notif.read ? 'text-foreground' : 'text-foreground'}`}>
                           {notif.title}
                         </h3>
-                        <span className="text-xs text-slate-400 whitespace-nowrap ml-4">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
                           {notif.createdAt?.toDate ? notif.createdAt.toDate().toLocaleString() : ''}
                         </span>
                       </div>
-                      <p className={`mt-2 text-sm leading-relaxed ${notif.read ? 'text-slate-500' : 'text-slate-700'}`}>
+                      <p className={`mt-2 text-sm leading-relaxed ${notif.read ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {notif.message}
                       </p>
                       

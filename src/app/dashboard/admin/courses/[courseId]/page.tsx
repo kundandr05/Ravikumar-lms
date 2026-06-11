@@ -82,7 +82,7 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading course...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading course...</div>;
   }
 
   if (!course) {
@@ -118,8 +118,8 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
 
       <div className="flex justify-between items-end pt-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Curriculum</h2>
-          <p className="text-slate-500">Manage the lessons for this course.</p>
+          <h2 className="text-2xl font-bold text-foreground">Curriculum</h2>
+          <p className="text-muted-foreground">Manage the lessons for this course.</p>
         </div>
         <Link href={`/dashboard/admin/courses/${courseId}/lessons/new`} className={buttonVariants()}>
           Add Lesson
@@ -127,10 +127,10 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
       </div>
 
       {lessons.length === 0 ? (
-        <Card className="border-dashed border-2 bg-slate-50 text-center py-12">
+        <Card className="border-dashed border-2 bg-muted/50 text-center py-12">
           <CardContent className="space-y-4">
-            <h3 className="text-xl font-bold text-slate-700">No Lessons Yet</h3>
-            <p className="text-slate-500">Add the first video lesson to start building your curriculum.</p>
+            <h3 className="text-xl font-bold text-foreground">No Lessons Yet</h3>
+            <p className="text-muted-foreground">Add the first video lesson to start building your curriculum.</p>
             <Link href={`/dashboard/admin/courses/${courseId}/lessons/new`} className={buttonVariants({ variant: "outline" })}>
               Add First Lesson
             </Link>
@@ -145,8 +145,8 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
                   {lesson.order}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900 truncate">{lesson.title}</h4>
-                  <div className="flex gap-4 text-xs text-slate-500 mt-1">
+                  <h4 className="font-bold text-foreground truncate">{lesson.title}</h4>
+                  <div className="flex gap-4 text-xs text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                       Video Attached
@@ -176,8 +176,8 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
       {/* Tests Section */}
       <div className="flex justify-between items-end pt-8 border-t">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Tests & Assessments</h2>
-          <p className="text-slate-500">Manage MCQ tests for this course.</p>
+          <h2 className="text-2xl font-bold text-foreground">Tests & Assessments</h2>
+          <p className="text-muted-foreground">Manage MCQ tests for this course.</p>
         </div>
         <Link href={`/dashboard/admin/courses/${courseId}/tests/new`} className={buttonVariants()}>
           Add Test
@@ -185,10 +185,10 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
       </div>
 
       {tests.length === 0 ? (
-        <Card className="border-dashed border-2 bg-slate-50 text-center py-12">
+        <Card className="border-dashed border-2 bg-muted/50 text-center py-12">
           <CardContent className="space-y-4">
-            <h3 className="text-xl font-bold text-slate-700">No Tests Yet</h3>
-            <p className="text-slate-500">Create the first MCQ test for your students.</p>
+            <h3 className="text-xl font-bold text-foreground">No Tests Yet</h3>
+            <p className="text-muted-foreground">Create the first MCQ test for your students.</p>
             <Link href={`/dashboard/admin/courses/${courseId}/tests/new`} className={buttonVariants({ variant: "outline" })}>
               Create First Test
             </Link>
@@ -199,9 +199,9 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
           {tests.map((test) => (
             <Card key={test.testId} className="hover:shadow-md transition-shadow flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{test.title}</h3>
-                <p className="text-sm text-slate-500 line-clamp-2 flex-1">{test.description}</p>
-                <div className="flex items-center gap-4 text-xs text-slate-500 mt-4 font-medium bg-slate-50 p-2 rounded w-max">
+                <h3 className="text-lg font-bold text-foreground mb-2">{test.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{test.description}</p>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 font-medium bg-muted/50 p-2 rounded w-max">
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {test.durationMinutes} mins

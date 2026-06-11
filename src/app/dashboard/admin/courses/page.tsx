@@ -56,7 +56,7 @@ export default function AdminCoursesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Course Management</h1>
-          <p className="text-slate-600">Create and manage your educational courses.</p>
+          <p className="text-muted-foreground">Create and manage your educational courses.</p>
         </div>
         <Link href="/dashboard/admin/courses/new" className={buttonVariants()}>Create New Course</Link>
       </div>
@@ -71,7 +71,7 @@ export default function AdminCoursesPage() {
             <p>Loading courses...</p>
           ) : courses.length === 0 ? (
             <div className="text-center p-8 border border-dashed rounded-lg">
-              <p className="text-slate-500 mb-4">You haven't created any courses yet.</p>
+              <p className="text-muted-foreground mb-4">You haven't created any courses yet.</p>
               <Link href="/dashboard/admin/courses/new" className={buttonVariants({ variant: "outline" })}>Create your first course</Link>
             </div>
           ) : (
@@ -87,7 +87,7 @@ export default function AdminCoursesPage() {
                     <CardTitle className="text-xl">{course.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1">
-                    <p className="text-sm text-slate-600 line-clamp-3 mb-4">{course.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{course.description}</p>
                     <div className="flex flex-wrap gap-2 mt-auto">
                       <Link href={`/dashboard/admin/courses/${course.courseId}`} className={buttonVariants({ variant: "default", size: "sm", className: "flex-1" })}>
                         Manage Lessons

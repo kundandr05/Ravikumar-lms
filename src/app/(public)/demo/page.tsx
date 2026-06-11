@@ -15,12 +15,12 @@ export default function DemoPage() {
   ];
 
   return (
-    <div className="py-20 bg-slate-50 min-h-screen">
+    <div className="py-20 bg-muted/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Free Demo Lectures</h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">Free Demo Lectures</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Experience Ravi Sir's unique teaching methodology before you enroll.
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function DemoPage() {
                 <div className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold mb-3 uppercase tracking-wider">
                   {demo.subject}
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">{demo.title}</h3>
+                <h3 className="text-xl font-bold text-foreground">{demo.title}</h3>
               </CardContent>
             </Card>
           ))}

@@ -72,8 +72,8 @@ export default function StudentPerformancePage() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Student Performance</h1>
-          <p className="text-slate-500 mt-2">Track academic performance and test scores across all students.</p>
+          <h1 className="text-3xl font-bold text-foreground">Student Performance</h1>
+          <p className="text-muted-foreground mt-2">Track academic performance and test scores across all students.</p>
         </div>
       </div>
 
@@ -84,16 +84,16 @@ export default function StudentPerformancePage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-center py-8">Loading performance data...</p>
+            <p className="text-muted-foreground text-center py-8">Loading performance data...</p>
           ) : performances.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 border rounded-lg border-dashed">
+            <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
               No performance data available yet.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b text-sm text-slate-500">
+                  <tr className="border-b text-sm text-muted-foreground">
                     <th className="pb-3 font-medium">Rank</th>
                     <th className="pb-3 font-medium">Student Name</th>
                     <th className="pb-3 font-medium">Tests Taken</th>
@@ -103,27 +103,27 @@ export default function StudentPerformancePage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {performances.map((perf, index) => (
-                    <tr key={perf.uid} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-500">#{index + 1}</td>
-                      <td className="py-4 font-bold text-slate-900">
+                    <tr key={perf.uid} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-4 font-medium text-muted-foreground">#{index + 1}</td>
+                      <td className="py-4 font-bold text-foreground">
                         <Link href={`/dashboard/admin/students/${perf.uid}`} className="hover:text-amber-600 hover:underline transition-colors">
                           {perf.name}
                         </Link>
-                        <div className="text-xs text-slate-500 font-normal">{perf.email}</div>
+                        <div className="text-xs text-muted-foreground font-normal">{perf.email}</div>
                       </td>
-                      <td className="py-4 text-slate-600">
+                      <td className="py-4 text-muted-foreground">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {perf.totalTests} tests
                         </span>
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`font-bold ${perf.averageScore >= 80 ? 'text-green-600' : perf.averageScore >= 60 ? 'text-amber-600' : perf.totalTests > 0 ? 'text-red-600' : 'text-slate-400'}`}>
+                          <span className={`font-bold ${perf.averageScore >= 80 ? 'text-green-600' : perf.averageScore >= 60 ? 'text-amber-600' : perf.totalTests > 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
                             {perf.totalTests > 0 ? `${perf.averageScore}%` : 'N/A'}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 text-slate-500 text-sm">
+                      <td className="py-4 text-muted-foreground text-sm">
                         {perf.lastTestDate ? perf.lastTestDate.toLocaleDateString() : 'Never'}
                       </td>
                     </tr>

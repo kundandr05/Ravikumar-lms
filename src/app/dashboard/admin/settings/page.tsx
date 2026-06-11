@@ -23,8 +23,8 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Platform Settings</h1>
-        <p className="text-slate-500 mt-1">Configure global settings for your Learning Management System.</p>
+        <h1 className="text-3xl font-bold text-foreground">Platform Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure global settings for your Learning Management System.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -52,7 +52,7 @@ export default function AdminSettingsPage() {
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
                 />
-                <p className="text-xs text-slate-500">This is where student support messages from the Student Portal will be sent.</p>
+                <p className="text-xs text-muted-foreground">This is where student support messages from the Student Portal will be sent.</p>
               </div>
 
               <Button type="submit" className="min-w-[120px]">
@@ -68,16 +68,16 @@ export default function AdminSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-50 rounded-lg border">
-                <Label className="text-xs text-slate-500 uppercase tracking-wider">Admin Name</Label>
-                <div className="font-medium text-slate-900 text-lg">{appUser?.name}</div>
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Admin Name</Label>
+                <div className="font-medium text-foreground text-lg">{appUser?.name}</div>
               </div>
-              <div className="p-4 bg-slate-50 rounded-lg border">
-                <Label className="text-xs text-slate-500 uppercase tracking-wider">Admin Email</Label>
-                <div className="font-medium text-slate-900 text-lg">{appUser?.email}</div>
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Admin Email</Label>
+                <div className="font-medium text-foreground text-lg">{appUser?.email}</div>
               </div>
             </div>
-            <p className="text-sm text-slate-500 mt-4">
+            <p className="text-sm text-muted-foreground mt-4">
               To change your primary login email or password, please use the Firebase Authentication console.
             </p>
           </CardContent>

@@ -109,7 +109,7 @@ export default function NewLessonPage({ params }: { params: Promise<{ courseId: 
                 value={notesPdfUrl}
                 onChange={(e) => setNotesPdfUrl(e.target.value)}
               />
-              <p className="text-xs text-slate-500">Paste a link to a Google Drive PDF (make sure access is set to "Anyone with the link"). Optional.</p>
+              <p className="text-xs text-muted-foreground">Paste a link to a Google Drive PDF (make sure access is set to "Anyone with the link"). Optional.</p>
             </div>
 
             <Button type="submit" className="w-full mt-6" disabled={loading}>

@@ -183,7 +183,7 @@ export default function NewAnnouncementPage() {
                 placeholder="Paste Google Meet, Zoom, or YouTube Live link here..." 
                 value={meetingLink}
                 onChange={(e) => setMeetingLink(e.target.value)}
-                className="bg-white"
+                className="bg-card text-card-foreground"
               />
               <p className="text-xs text-amber-700/80">If provided, a shiny "Join Live Class" button will appear for students.</p>
             </div>
@@ -214,7 +214,7 @@ export default function NewAnnouncementPage() {
                   value={scheduledForStr}
                   onChange={(e) => setScheduledForStr(e.target.value)}
                 />
-                <p className="text-xs text-slate-500">Leave blank to send immediately.</p>
+                <p className="text-xs text-muted-foreground">Leave blank to send immediately.</p>
               </div>
             </div>
 

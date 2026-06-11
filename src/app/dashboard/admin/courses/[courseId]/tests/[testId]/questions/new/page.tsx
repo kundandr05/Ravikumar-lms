@@ -104,7 +104,7 @@ export default function NewQuestionPage({ params }: { params: Promise<{ courseId
               <Label>Options</Label>
               {options.map((opt, index) => (
                 <div key={index} className="flex items-center gap-4">
-                  <span className="font-medium text-slate-500 w-6">
+                  <span className="font-medium text-muted-foreground w-6">
                     {String.fromCharCode(65 + index)}.
                   </span>
                   <Input 

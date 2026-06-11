@@ -54,8 +54,8 @@ export default function StudentSettingsPage() {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Settings & Support</h1>
-        <p className="text-slate-500 mt-1">Manage your account preferences and contact the admin.</p>
+        <h1 className="text-3xl font-bold text-foreground">Settings & Support</h1>
+        <p className="text-muted-foreground mt-1">Manage your account preferences and contact the admin.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -66,16 +66,16 @@ export default function StudentSettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-xs text-slate-500 uppercase tracking-wider">Name</Label>
-                <div className="font-medium text-slate-900">{appUser?.name}</div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Name</Label>
+                <div className="font-medium text-foreground">{appUser?.name}</div>
               </div>
               <div>
-                <Label className="text-xs text-slate-500 uppercase tracking-wider">Email Address</Label>
-                <div className="font-medium text-slate-900">{appUser?.email}</div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Email Address</Label>
+                <div className="font-medium text-foreground">{appUser?.email}</div>
               </div>
               <div>
-                <Label className="text-xs text-slate-500 uppercase tracking-wider">Role</Label>
-                <div className="font-medium text-slate-900 capitalize">{appUser?.role}</div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Role</Label>
+                <div className="font-medium text-foreground capitalize">{appUser?.role}</div>
               </div>
             </CardContent>
           </Card>

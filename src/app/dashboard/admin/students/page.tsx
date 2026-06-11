@@ -80,8 +80,8 @@ export default function AdminStudentsPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Student Directory</h1>
-          <p className="text-slate-500 mt-2">Manage all registered students on the platform.</p>
+          <h1 className="text-3xl font-bold text-foreground">Student Directory</h1>
+          <p className="text-muted-foreground mt-2">Manage all registered students on the platform.</p>
         </div>
         <Button onClick={downloadCSV} disabled={students.length === 0 || loading} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,16 +97,16 @@ export default function AdminStudentsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-center py-8">Loading students...</p>
+            <p className="text-muted-foreground text-center py-8">Loading students...</p>
           ) : students.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 border rounded-lg border-dashed">
+            <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
               No students found.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b text-sm text-slate-500">
+                  <tr className="border-b text-sm text-muted-foreground">
                     <th className="pb-3 font-medium">Name</th>
                     <th className="pb-3 font-medium">Email</th>
                     <th className="pb-3 font-medium">Phone</th>
@@ -115,15 +115,15 @@ export default function AdminStudentsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {students.map((student) => (
-                    <tr key={student.uid} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">
+                    <tr key={student.uid} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-4 font-medium text-foreground">
                         <Link href={`/dashboard/admin/students/${student.uid}`} className="hover:text-amber-600 hover:underline transition-colors">
                           {student.name}
                         </Link>
                       </td>
-                      <td className="py-4 text-slate-600">{student.email}</td>
-                      <td className="py-4 text-slate-600">{student.phone || 'N/A'}</td>
-                      <td className="py-4 text-slate-500 text-sm">
+                      <td className="py-4 text-muted-foreground">{student.email}</td>
+                      <td className="py-4 text-muted-foreground">{student.phone || 'N/A'}</td>
+                      <td className="py-4 text-muted-foreground text-sm">
                         {student.createdAt?.toDate ? student.createdAt.toDate().toLocaleDateString() : 'Unknown'}
                       </td>
                     </tr>

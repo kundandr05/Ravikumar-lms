@@ -72,8 +72,8 @@ export default function StudentResultsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">My Results</h1>
-        <p className="text-slate-500 mt-2">Track your test performance and progress.</p>
+        <h1 className="text-3xl font-bold text-foreground">My Results</h1>
+        <p className="text-muted-foreground mt-2">Track your test performance and progress.</p>
       </div>
 
       {attempts.length > 0 && (
@@ -126,9 +126,9 @@ export default function StudentResultsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-center py-8">Loading your results...</p>
+            <p className="text-muted-foreground text-center py-8">Loading your results...</p>
           ) : attempts.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 border rounded-lg border-dashed">
+            <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
               <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               You haven't taken any tests yet.
             </div>
@@ -136,7 +136,7 @@ export default function StudentResultsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b text-sm text-slate-500">
+                  <tr className="border-b text-sm text-muted-foreground">
                     <th className="pb-3 font-medium">Test Name</th>
                     <th className="pb-3 font-medium">Date Taken</th>
                     <th className="pb-3 font-medium">Score</th>
@@ -145,12 +145,12 @@ export default function StudentResultsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {attempts.map((attempt) => (
-                    <tr key={attempt.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-medium text-slate-900">{attempt.testTitle || 'Untitled Test'}</td>
-                      <td className="py-4 text-slate-500 text-sm">
+                    <tr key={attempt.id} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-4 font-medium text-foreground">{attempt.testTitle || 'Untitled Test'}</td>
+                      <td className="py-4 text-muted-foreground text-sm">
                         {attempt.submittedAt?.toDate ? attempt.submittedAt.toDate().toLocaleDateString() : 'Unknown'}
                       </td>
-                      <td className="py-4 text-slate-900 font-medium">
+                      <td className="py-4 text-foreground font-medium">
                         {attempt.score} / {attempt.totalScore}
                       </td>
                       <td className="py-4">

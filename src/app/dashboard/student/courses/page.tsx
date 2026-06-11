@@ -158,8 +158,8 @@ export default function StudentCoursesPage() {
       {/* Enrolled Courses Section */}
       <section className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">My Courses</h1>
-          <p className="text-slate-500 mt-2">Access your enrolled courses and continue learning.</p>
+          <h1 className="text-3xl font-bold text-foreground">My Courses</h1>
+          <p className="text-muted-foreground mt-2">Access your enrolled courses and continue learning.</p>
         </div>
 
         {loading ? (
@@ -175,11 +175,11 @@ export default function StudentCoursesPage() {
             ))}
           </div>
         ) : enrolledCourses.length === 0 ? (
-          <Card className="border-dashed border-2 bg-slate-50 text-center py-16">
+          <Card className="border-dashed border-2 bg-muted/50 text-center py-16">
             <CardContent className="space-y-4">
               <svg className="w-16 h-16 text-slate-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-              <h3 className="text-xl font-bold text-slate-700">No Courses Yet</h3>
-              <p className="text-slate-500">You haven't enrolled in any courses. Explore available courses below!</p>
+              <h3 className="text-xl font-bold text-foreground">No Courses Yet</h3>
+              <p className="text-muted-foreground">You haven't enrolled in any courses. Explore available courses below!</p>
             </CardContent>
           </Card>
         ) : (
@@ -197,16 +197,16 @@ export default function StudentCoursesPage() {
                 </div>
                 <CardContent className="p-6 flex flex-col flex-1">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-slate-900">{course.title}</h3>
+                    <h3 className="text-xl font-bold text-foreground">{course.title}</h3>
                     <span className="text-sm font-bold text-emerald-600">{course.progressPercentage}%</span>
                   </div>
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full mb-4 overflow-hidden">
+                  <div className="w-full bg-muted h-1.5 rounded-full mb-4 overflow-hidden">
                     <div 
                       className="bg-emerald-500 h-full rounded-full transition-all duration-1000" 
                       style={{ width: `${course.progressPercentage}%` }} 
                     />
                   </div>
-                  <p className="text-sm text-slate-600 line-clamp-2 mb-6 flex-1">{course.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-6 flex-1">{course.description}</p>
                   
                   {course.status === 'completed' ? (
                     <div className="w-full bg-green-100 text-green-800 font-bold py-2 px-4 rounded-md text-center text-sm border border-green-200 shadow-sm animate-pulse">
@@ -230,30 +230,30 @@ export default function StudentCoursesPage() {
       {/* Available Courses Section */}
       <section className="space-y-6 pt-8 border-t border-slate-200">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Available Courses</h2>
-          <p className="text-slate-500 mt-2">Discover new topics and enroll in courses created by the admin.</p>
+          <h2 className="text-2xl font-bold text-foreground">Available Courses</h2>
+          <p className="text-muted-foreground mt-2">Discover new topics and enroll in courses created by the admin.</p>
         </div>
 
         {!loading && availableCourses.length === 0 ? (
-          <div className="text-slate-500 italic bg-slate-50 p-6 rounded-lg border">
+          <div className="text-muted-foreground italic bg-muted/50 p-6 rounded-lg border">
             No new courses are available for enrollment at the moment.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableCourses.map((course) => (
               <Card key={course.courseId} className="overflow-hidden flex flex-col border border-slate-200">
-                <div className="w-full h-40 bg-slate-100 relative">
+                <div className="w-full h-40 bg-muted relative">
                   {course.thumbnail ? (
                     <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                       <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                     </div>
                   )}
                 </div>
                 <CardContent className="p-6 flex flex-col flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{course.title}</h3>
-                  <p className="text-sm text-slate-600 line-clamp-2 mb-6 flex-1">{course.description}</p>
+                  <h3 className="text-lg font-bold text-foreground mb-2">{course.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-6 flex-1">{course.description}</p>
                   <Button 
                     variant="outline"
                     className="w-full border-amber-500 text-amber-700 hover:bg-amber-50"

@@ -16,13 +16,13 @@ export default function HomePage() {
     <SplashIntro>
       <div className="flex flex-col min-h-screen">
         {/* Hero Section */}
-      <section className="bg-slate-50 py-20 lg:py-32">
+      <section className="bg-muted/50 py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight">
             Master Class 10 with <br className="hidden md:block"/>
             <span className="text-amber-600">Ravikumar's Expert Guidance</span>
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             17+ Years of Excellence in English & Social Science. Join the premier learning platform designed to guarantee your board exam success.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -120,27 +120,27 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row gap-12 items-center">
             <div className="w-full md:w-1/2 aspect-square max-w-md bg-slate-200 rounded-2xl overflow-hidden relative shadow-lg">
               {/* Placeholder for Ravi Sir's photo */}
-              <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                 <svg className="w-32 h-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
             </div>
             <div className="w-full md:w-1/2 space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Meet Ravikumar D</h2>
-              <p className="text-lg text-slate-600 leading-relaxed">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Meet Ravikumar D</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
                 With over 17 years of dedicated teaching experience, Ravikumar D has transformed the way students approach Class 10 Board Exams. Specializing in English and Social Science, his unique methodology focuses on deep conceptual clarity rather than rote memorization.
               </p>
               <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-slate-700">
+                <li className="flex items-center gap-3 text-foreground">
                   <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                   Proven track record of board toppers
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
+                <li className="flex items-center gap-3 text-foreground">
                   <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                   Interactive and engaging teaching style
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
+                <li className="flex items-center gap-3 text-foreground">
                   <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                   Comprehensive study materials provided
                 </li>
@@ -152,11 +152,11 @@ export default function HomePage() {
       </section>
 
       {/* Courses Highlights */}
-      <section className="bg-slate-50 py-20">
+      <section className="bg-muted/50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Subjects Offered</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Master the most crucial subjects for your Class 10 Board Exams with specialized curriculum.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">Subjects Offered</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Master the most crucial subjects for your Class 10 Board Exams with specialized curriculum.</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -167,7 +167,7 @@ export default function HomePage() {
                     <span className="text-2xl font-bold text-amber-600">EN</span>
                   </div>
                   <h3 className="text-2xl font-bold">Class 10 English</h3>
-                  <p className="text-slate-600">Complete literature syllabus, grammar, writing skills, and reading comprehension.</p>
+                  <p className="text-muted-foreground">Complete literature syllabus, grammar, writing skills, and reading comprehension.</p>
                   <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
                 </CardContent>
               </Card>
@@ -180,7 +180,7 @@ export default function HomePage() {
                     <span className="text-2xl font-bold text-amber-600">SST</span>
                   </div>
                   <h3 className="text-2xl font-bold">Class 10 Social Science</h3>
-                  <p className="text-slate-600">In-depth coverage of History, Geography, Political Science, and Economics.</p>
+                  <p className="text-muted-foreground">In-depth coverage of History, Geography, Political Science, and Economics.</p>
                   <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
                 </CardContent>
               </Card>
@@ -197,7 +197,7 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white">Ready to Secure Your Board Results?</h2>
           <p className="text-xl text-slate-300">Enroll today and get immediate access to premium video lectures, notes, and MCQ tests.</p>
-          <Link href="/enroll" className={buttonVariants({ size: "lg", className: "!bg-amber-500 hover:!bg-amber-600 !text-slate-900 font-bold text-lg px-10 py-6" })}>Enroll Now for 2026 Batch</Link>
+          <Link href="/enroll" className={buttonVariants({ size: "lg", className: "!bg-amber-500 hover:!bg-amber-600 !text-foreground font-bold text-lg px-10 py-6" })}>Enroll Now for 2026 Batch</Link>
         </div>
       </section>
     </div>

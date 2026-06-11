@@ -53,12 +53,12 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="py-20 bg-slate-50 min-h-screen">
+    <div className="py-20 bg-muted/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div className="text-center space-y-4 mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Contact Us</h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">Contact Us</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Have questions about our courses or enrollment process? We're here to help!
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function ContactPage() {
           <div className="w-full md:w-2/3">
             <Card className="shadow-lg border-0">
               <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-6 text-slate-900">Send us a Message</h3>
+                <h3 className="text-2xl font-bold mb-6 text-foreground">Send us a Message</h3>
 
                 {success ? (
                   <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-6 text-center space-y-4">

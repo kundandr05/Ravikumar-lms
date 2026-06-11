@@ -171,7 +171,7 @@ export default function AdvancedAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-500 animate-pulse">Running Firestore Aggregations...</p>
+        <p className="text-muted-foreground animate-pulse">Running Firestore Aggregations...</p>
       </div>
     );
   }
@@ -181,16 +181,16 @@ export default function AdvancedAnalyticsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Advanced Analytics</h1>
-        <p className="text-slate-500 mt-2">Deep insights powered by optimized server-side aggregations.</p>
+        <h1 className="text-3xl font-bold text-foreground">Advanced Analytics</h1>
+        <p className="text-muted-foreground mt-2">Deep insights powered by optimized server-side aggregations.</p>
       </div>
 
       {/* Top Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-sm border-slate-200">
           <CardContent className="p-6">
-            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Students</p>
-            <h3 className="text-4xl font-black text-slate-900 mt-2">{totalStudents}</h3>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Students</p>
+            <h3 className="text-4xl font-black text-foreground mt-2">{totalStudents}</h3>
           </CardContent>
         </Card>
         

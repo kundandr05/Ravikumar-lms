@@ -89,7 +89,7 @@ export default function NewCoursePage() {
                 value={thumbnail}
                 onChange={(e) => setThumbnail(e.target.value)}
               />
-              <p className="text-xs text-slate-500">For now, provide a direct URL to an image. Later we will add file uploads.</p>
+              <p className="text-xs text-muted-foreground">For now, provide a direct URL to an image. Later we will add file uploads.</p>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

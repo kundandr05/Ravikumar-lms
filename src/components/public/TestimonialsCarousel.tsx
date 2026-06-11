@@ -40,11 +40,11 @@ export function TestimonialsCarousel() {
   }
 
   return (
-    <section className="bg-white py-20 border-t">
+    <section className="bg-card text-card-foreground py-20 border-t">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Student Success Stories</h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">Hear directly from the students who achieved top ranks under Ravikumar's guidance.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground">Student Success Stories</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Hear directly from the students who achieved top ranks under Ravikumar's guidance.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -58,15 +58,15 @@ export function TestimonialsCarousel() {
                     </svg>
                   ))}
                 </div>
-                <h4 className="font-bold text-lg text-slate-900 mb-2">{review.title}</h4>
-                <p className="text-slate-600 mb-6 flex-grow italic">"{review.message || (review as any).review}"</p>
+                <h4 className="font-bold text-lg text-foreground mb-2">{review.title}</h4>
+                <p className="text-muted-foreground mb-6 flex-grow italic">"{review.message || (review as any).review}"</p>
                 <div className="flex items-center gap-3 mt-auto">
                   <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center font-bold text-amber-700">
                     {review.studentName?.charAt(0).toUpperCase() || 'S'}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900">{review.studentName || 'Student'}</div>
-                    <div className="text-xs text-slate-500">Class 10 Batch</div>
+                    <div className="font-bold text-foreground">{review.studentName || 'Student'}</div>
+                    <div className="text-xs text-muted-foreground">Class 10 Batch</div>
                   </div>
                 </div>
               </CardContent>

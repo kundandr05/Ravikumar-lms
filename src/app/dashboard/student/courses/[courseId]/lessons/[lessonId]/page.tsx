@@ -130,7 +130,7 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   }, [courseId, lessonId, appUser]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading video player...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading video player...</div>;
   }
 
   const handleMarkAsComplete = async () => {
@@ -155,8 +155,8 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   if (!isEnrolled) {
     return (
       <div className="p-8 text-center max-w-lg mx-auto mt-12 space-y-4">
-        <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
-        <p className="text-slate-600">You must be enrolled in this course to watch lessons.</p>
+        <h2 className="text-2xl font-bold text-foreground">Access Denied</h2>
+        <p className="text-muted-foreground">You must be enrolled in this course to watch lessons.</p>
         <Link href="/courses" className={buttonVariants()}>Browse Public Courses</Link>
       </div>
     );
@@ -192,7 +192,7 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
                 allowFullScreen
               ></iframe>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-900">
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-slate-900">
                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                 <p>Invalid Video URL or Video Unavailable</p>
               </div>
@@ -200,8 +200,8 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              <span className="text-slate-400 mr-2">{lesson.order}.</span>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              <span className="text-muted-foreground mr-2">{lesson.order}.</span>
               {lesson.title}
             </h1>
           </div>
@@ -273,7 +273,7 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
 
           {/* Playlist Card */}
           <Card>
-            <CardHeader className="pb-3 bg-slate-50 border-b">
+            <CardHeader className="pb-3 bg-muted/50 border-b">
               <CardTitle className="text-lg">Course Content</CardTitle>
             </CardHeader>
             <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
@@ -283,16 +283,16 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
                   <Link 
                     key={l.lessonId}
                     href={`/dashboard/student/courses/${courseId}/lessons/${l.lessonId}`}
-                    className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors ${isActive ? 'bg-amber-50 hover:bg-amber-50' : ''}`}
+                    className={`flex gap-3 p-4 hover:bg-muted/50 transition-colors ${isActive ? 'bg-amber-50 hover:bg-amber-50' : ''}`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-amber-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-amber-600 text-white' : 'bg-slate-200 text-muted-foreground'}`}>
                       {isActive ? (
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
                       ) : (
                         l.order
                       )}
                     </div>
-                    <p className={`text-sm font-medium line-clamp-2 ${isActive ? 'text-amber-900' : 'text-slate-700'}`}>
+                    <p className={`text-sm font-medium line-clamp-2 ${isActive ? 'text-amber-900' : 'text-foreground'}`}>
                       {l.title}
                     </p>
                   </Link>

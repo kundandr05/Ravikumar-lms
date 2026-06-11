@@ -4,12 +4,12 @@ import Link from 'next/link';
 
 export default function CoursesPage() {
   return (
-    <div className="py-20 bg-slate-50 min-h-screen">
+    <div className="py-20 bg-muted/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Our Premium Courses</h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">Our Premium Courses</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Comprehensive syllabus coverage designed to help you secure 95%+ in your Class 10 Board Exams.
           </p>
         </div>
@@ -18,12 +18,12 @@ export default function CoursesPage() {
           
           {/* English Course */}
           <Card className="border-t-4 border-t-amber-500 shadow-lg">
-            <CardHeader className="bg-slate-100 border-b pb-8 pt-8 text-center space-y-4">
+            <CardHeader className="bg-muted border-b pb-8 pt-8 text-center space-y-4">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <span className="text-3xl font-bold text-amber-600">EN</span>
               </div>
               <CardTitle className="text-3xl">Class 10 English</CardTitle>
-              <p className="text-slate-600">Language and Literature</p>
+              <p className="text-muted-foreground">Language and Literature</p>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="space-y-4">
@@ -53,12 +53,12 @@ export default function CoursesPage() {
 
           {/* Social Science Course */}
           <Card className="border-t-4 border-t-amber-500 shadow-lg">
-            <CardHeader className="bg-slate-100 border-b pb-8 pt-8 text-center space-y-4">
+            <CardHeader className="bg-muted border-b pb-8 pt-8 text-center space-y-4">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <span className="text-3xl font-bold text-amber-600">SST</span>
               </div>
               <CardTitle className="text-3xl">Class 10 Social Science</CardTitle>
-              <p className="text-slate-600">History, Geography, Civics & Economics</p>
+              <p className="text-muted-foreground">History, Geography, Civics & Economics</p>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="space-y-4">

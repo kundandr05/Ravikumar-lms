@@ -58,7 +58,7 @@ export default function Footer() {
           </div>
 
         </div>
-        <div className="mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
+        <div className="mt-12 pt-8 border-t border-slate-800 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Ravi Classes. All rights reserved.</p>
         </div>
       </div>

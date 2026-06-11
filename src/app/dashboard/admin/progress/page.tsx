@@ -141,7 +141,7 @@ export default function AdminProgressPage() {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Compiling progress analytics...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Compiling progress analytics...</div>;
   }
 
   const COLORS = ['#ef4444', '#f59e0b', '#10b981'];
@@ -149,8 +149,8 @@ export default function AdminProgressPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Learning Progress</h1>
-        <p className="text-slate-500 mt-2">Track student engagement and course completion metrics.</p>
+        <h1 className="text-3xl font-bold text-foreground">Learning Progress</h1>
+        <p className="text-muted-foreground mt-2">Track student engagement and course completion metrics.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -191,14 +191,14 @@ export default function AdminProgressPage() {
       </div>
 
       <Card className="shadow-sm overflow-hidden">
-        <CardHeader className="bg-slate-50 border-b">
+        <CardHeader className="bg-muted/50 border-b">
           <CardTitle>Student Progress Roster</CardTitle>
           <CardDescription>Detailed view of each student's learning progress.</CardDescription>
         </CardHeader>
         <div className="overflow-x-auto max-h-[500px]">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white sticky top-0 shadow-sm z-10">
-              <tr className="text-slate-500 border-b">
+            <thead className="bg-card text-card-foreground sticky top-0 shadow-sm z-10">
+              <tr className="text-muted-foreground border-b">
                 <th className="p-4 font-medium">Student</th>
                 <th className="p-4 font-medium">Enrollments</th>
                 <th className="p-4 font-medium min-w-[200px]">Overall Progress</th>
@@ -206,20 +206,20 @@ export default function AdminProgressPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {studentDataList.map((student) => (
-                <tr key={student.uid} className="hover:bg-slate-50 transition-colors">
+                <tr key={student.uid} className="hover:bg-muted/50 transition-colors">
                   <td className="p-4">
-                    <p className="font-bold text-slate-900">{student.name}</p>
-                    <p className="text-xs text-slate-500">{student.email}</p>
+                    <p className="font-bold text-foreground">{student.name}</p>
+                    <p className="text-xs text-muted-foreground">{student.email}</p>
                   </td>
                   <td className="p-4">
                     {student.enrollments.length === 0 ? (
-                      <span className="text-slate-400 italic">None</span>
+                      <span className="text-muted-foreground italic">None</span>
                     ) : (
                       <div className="space-y-1">
                         {student.enrollments.map(e => (
-                          <div key={e.courseId} className="flex items-center justify-between text-xs bg-slate-100 px-2 py-1 rounded">
-                            <span className="truncate max-w-[150px] font-medium text-slate-700" title={e.courseName}>{e.courseName}</span>
-                            <span className={e.progressPercentage === 100 ? 'text-emerald-600 font-bold' : 'text-slate-500'}>
+                          <div key={e.courseId} className="flex items-center justify-between text-xs bg-muted px-2 py-1 rounded">
+                            <span className="truncate max-w-[150px] font-medium text-foreground" title={e.courseName}>{e.courseName}</span>
+                            <span className={e.progressPercentage === 100 ? 'text-emerald-600 font-bold' : 'text-muted-foreground'}>
                               {e.progressPercentage}%
                             </span>
                           </div>
@@ -235,14 +235,14 @@ export default function AdminProgressPage() {
                           style={{ width: `${student.overallProgress}%` }}
                         />
                       </div>
-                      <span className="font-bold w-10 text-right text-slate-700">{student.overallProgress}%</span>
+                      <span className="font-bold w-10 text-right text-foreground">{student.overallProgress}%</span>
                     </div>
                   </td>
                 </tr>
               ))}
               {studentDataList.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-8 text-center text-slate-500">No student data available.</td>
+                  <td colSpan={3} className="p-8 text-center text-muted-foreground">No student data available.</td>
                 </tr>
               )}
             </tbody>

@@ -48,8 +48,8 @@ export default function AdminAnnouncementsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Announcements</h1>
-          <p className="text-slate-500 mt-2">Broadcast messages to students across the platform.</p>
+          <h1 className="text-3xl font-bold text-foreground">Announcements</h1>
+          <p className="text-muted-foreground mt-2">Broadcast messages to students across the platform.</p>
         </div>
         <Link href="/dashboard/admin/announcements/new" className={buttonVariants()}>
           <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -64,19 +64,19 @@ export default function AdminAnnouncementsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-slate-500">Loading...</div>
+            <div className="py-8 text-center text-muted-foreground">Loading...</div>
           ) : announcements.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 text-slate-500">
+            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/50 text-muted-foreground">
               No announcements found. Create your first one to notify students!
             </div>
           ) : (
             <div className="space-y-4">
               {announcements.map((ann) => (
-                <div key={ann.announcementId} className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors bg-white">
+                <div key={ann.announcementId} className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors bg-card text-card-foreground">
                   <div className="flex justify-between items-start gap-4">
                     <div>
-                      <h3 className="font-bold text-lg text-slate-900">{ann.title}</h3>
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2 whitespace-pre-line">{ann.message}</p>
+                      <h3 className="font-bold text-lg text-foreground">{ann.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2 whitespace-pre-line">{ann.message}</p>
                       
                       {ann.meetingLink && (
                         <div className="mt-3">
@@ -88,10 +88,10 @@ export default function AdminAnnouncementsPage() {
                       )}
 
                       <div className="flex gap-4 mt-4 text-xs font-medium">
-                        <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded">
+                        <span className="bg-muted text-foreground px-2 py-1 rounded">
                           Target: {ann.targetAudience === 'all' ? 'All Students' : `Course: ${ann.targetAudience}`}
                         </span>
-                        <span className="text-slate-400 flex items-center">
+                        <span className="text-muted-foreground flex items-center">
                           <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                           {ann.createdAt?.toDate ? ann.createdAt.toDate().toLocaleString() : 'Unknown Date'}
                         </span>
