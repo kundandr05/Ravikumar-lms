@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { buttonVariants } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
@@ -15,8 +16,11 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="text-2xl font-bold text-slate-900 tracking-tight">
-              Ravi<span className="text-amber-600">Classes</span>
+            <Link href="/" className="flex items-center gap-2">
+              <Image src="/logo.png" alt="RaviClasses Logo" width={32} height={32} className="rounded-md" />
+              <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                Ravi<span className="text-amber-600">Classes</span>
+              </span>
             </Link>
           </div>
 

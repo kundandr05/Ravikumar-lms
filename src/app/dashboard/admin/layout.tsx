@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { BottomNav } from '@/components/layout/BottomNav';
 
@@ -97,8 +98,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 bg-slate-900 w-64 text-slate-300 transition-transform z-50 flex flex-col md:translate-x-0 md:static ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between">
-          <Link href="/dashboard/admin" className="text-xl font-bold text-white tracking-tight">
-            Ravi<span className="text-amber-500">Classes</span> Admin
+          <Link href="/dashboard/admin" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />
+            <span className="text-xl font-bold text-white tracking-tight">
+              Ravi<span className="text-amber-500">Classes</span>
+            </span>
           </Link>
           <button className="md:hidden text-slate-300 hover:text-white" onClick={() => setIsMobileOpen(false)}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
