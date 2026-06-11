@@ -155,9 +155,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50/50 relative">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
         {/* Top Header */}
-        <header className="bg-white/70 backdrop-blur-xl border-b border-white/40 h-16 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.03)] z-10 sticky top-0">
+        <header className="bg-white border-b h-16 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsMobileOpen(true)} className="md:hidden text-slate-600 focus:outline-none p-2 rounded-md hover:bg-slate-100">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
