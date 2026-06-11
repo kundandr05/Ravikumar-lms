@@ -4,14 +4,13 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const { appUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white border-b sticky top-0 z-50">
+    <nav className="bg-white/80 backdrop-blur-xl border-b border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)] sticky top-0 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -33,7 +32,6 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
             {appUser ? (
               <Link href={`/dashboard/${appUser.role}`} className={buttonVariants()}>Dashboard</Link>
             ) : (
@@ -44,9 +42,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button & Theme toggle */}
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-slate-600 hover:text-slate-900 focus:outline-none"
@@ -65,7 +62,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-t">
+        <div className="md:hidden bg-white/90 backdrop-blur-2xl border-b border-t border-white/40 shadow-xl absolute w-full">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50">Home</Link>
             <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50">About</Link>
