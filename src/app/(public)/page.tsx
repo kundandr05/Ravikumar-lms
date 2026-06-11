@@ -3,6 +3,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TestimonialsCarousel } from '@/components/public/TestimonialsCarousel';
 import { TiltWrapper } from '@/components/ui/TiltWrapper';
+import { SplashIntro } from '@/components/public/SplashIntro';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -12,8 +13,9 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
+    <SplashIntro>
+      <div className="flex flex-col min-h-screen">
+        {/* Hero Section */}
       <section className="bg-slate-50 py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
@@ -199,5 +201,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </SplashIntro>
   );
 }
