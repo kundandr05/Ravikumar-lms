@@ -20,6 +20,7 @@
     "nodemailer": "^8.0.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-parallax-tilt": "^1.7.331",
     "recharts": "^3.8.1",
     "shadcn": "^4.10.0",
     "tailwind-merge": "^3.6.0",

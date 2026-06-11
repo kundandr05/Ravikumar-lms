@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TestimonialsCarousel } from '@/components/public/TestimonialsCarousel';
+import { TiltWrapper } from '@/components/ui/TiltWrapper';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -33,18 +34,24 @@ export default function HomePage() {
       <section className="bg-amber-600 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-            <div className="space-y-2">
-               <h2 className="text-4xl font-bold text-white">17+</h2>
-               <p className="text-amber-100 font-medium">Years Experience</p>
-            </div>
-            <div className="space-y-5">
-               <h2 className="text-4xl font-bold text-white">500+</h2>
-               <p className="text-amber-100 font-medium">Students Mentored</p>
-            </div>
-            <div className="space-y-5">
-               <h2 className="text-4xl font-bold text-white">2</h2>
-               <p className="text-amber-100 font-medium">Core Subjects</p>
-            </div>
+            <TiltWrapper>
+              <div className="space-y-2 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
+                 <h2 className="text-4xl font-bold text-white">17+</h2>
+                 <p className="text-amber-100 font-medium">Years Experience</p>
+              </div>
+            </TiltWrapper>
+            <TiltWrapper>
+              <div className="space-y-5 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
+                 <h2 className="text-4xl font-bold text-white">500+</h2>
+                 <p className="text-amber-100 font-medium">Students Mentored</p>
+              </div>
+            </TiltWrapper>
+            <TiltWrapper>
+              <div className="space-y-5 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
+                 <h2 className="text-4xl font-bold text-white">2</h2>
+                 <p className="text-amber-100 font-medium">Core Subjects</p>
+              </div>
+            </TiltWrapper>
           </div>
         </div>
       </section>
@@ -151,27 +158,31 @@ export default function HomePage() {
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500">
-              <CardContent className="p-8 space-y-4 text-center">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl font-bold text-amber-600">EN</span>
-                </div>
-                <h3 className="text-2xl font-bold">Class 10 English</h3>
-                <p className="text-slate-600">Complete literature syllabus, grammar, writing skills, and reading comprehension.</p>
-                <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
-              </CardContent>
-            </Card>
+            <TiltWrapper>
+              <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500 h-full">
+                <CardContent className="p-8 space-y-4 text-center">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-2xl font-bold text-amber-600">EN</span>
+                  </div>
+                  <h3 className="text-2xl font-bold">Class 10 English</h3>
+                  <p className="text-slate-600">Complete literature syllabus, grammar, writing skills, and reading comprehension.</p>
+                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
+                </CardContent>
+              </Card>
+            </TiltWrapper>
 
-            <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500">
-              <CardContent className="p-8 space-y-4 text-center">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl font-bold text-amber-600">SST</span>
-                </div>
-                <h3 className="text-2xl font-bold">Class 10 Social Science</h3>
-                <p className="text-slate-600">In-depth coverage of History, Geography, Political Science, and Economics.</p>
-                <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
-              </CardContent>
-            </Card>
+            <TiltWrapper>
+              <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500 h-full">
+                <CardContent className="p-8 space-y-4 text-center">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-2xl font-bold text-amber-600">SST</span>
+                  </div>
+                  <h3 className="text-2xl font-bold">Class 10 Social Science</h3>
+                  <p className="text-slate-600">In-depth coverage of History, Geography, Political Science, and Economics.</p>
+                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
+                </CardContent>
+              </Card>
+            </TiltWrapper>
           </div>
         </div>
       </section>
