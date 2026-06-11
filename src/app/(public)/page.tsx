@@ -20,7 +20,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight">
             Master Class 10 with <br className="hidden md:block"/>
-            <span className="text-amber-600">Ravikumar's Expert Guidance</span>
+            <span className="text-primary">Ravikumar's Expert Guidance</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             17+ Years of Excellence in English & Social Science. Join the premier learning platform designed to guarantee your board exam success.
@@ -38,19 +38,19 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
             <TiltWrapper>
               <div className="space-y-2 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
-                 <h2 className="text-4xl font-bold text-white">17+</h2>
+                 <h2 className="text-4xl font-bold text-primary-foreground">17+</h2>
                  <p className="text-amber-100 font-medium">Years Experience</p>
               </div>
             </TiltWrapper>
             <TiltWrapper>
               <div className="space-y-5 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
-                 <h2 className="text-4xl font-bold text-white">500+</h2>
+                 <h2 className="text-4xl font-bold text-primary-foreground">500+</h2>
                  <p className="text-amber-100 font-medium">Students Mentored</p>
               </div>
             </TiltWrapper>
             <TiltWrapper>
               <div className="space-y-5 p-6 rounded-xl border border-amber-500/20 bg-amber-700/20 shadow-xl backdrop-blur-sm">
-                 <h2 className="text-4xl font-bold text-white">2</h2>
+                 <h2 className="text-4xl font-bold text-primary-foreground">2</h2>
                  <p className="text-amber-100 font-medium">Core Subjects</p>
               </div>
             </TiltWrapper>
@@ -164,11 +164,11 @@ export default function HomePage() {
               <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500 h-full">
                 <CardContent className="p-8 space-y-4 text-center">
                   <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-2xl font-bold text-amber-600">EN</span>
+                    <span className="text-2xl font-bold text-primary">EN</span>
                   </div>
                   <h3 className="text-2xl font-bold">Class 10 English</h3>
                   <p className="text-muted-foreground">Complete literature syllabus, grammar, writing skills, and reading comprehension.</p>
-                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
+                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-primary hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
                 </CardContent>
               </Card>
             </TiltWrapper>
@@ -177,11 +177,11 @@ export default function HomePage() {
               <Card className="hover:shadow-lg transition-shadow border-t-4 border-t-amber-500 h-full">
                 <CardContent className="p-8 space-y-4 text-center">
                   <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-2xl font-bold text-amber-600">SST</span>
+                    <span className="text-2xl font-bold text-primary">SST</span>
                   </div>
                   <h3 className="text-2xl font-bold">Class 10 Social Science</h3>
                   <p className="text-muted-foreground">In-depth coverage of History, Geography, Political Science, and Economics.</p>
-                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-amber-600 hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
+                  <Link href="/courses" className={buttonVariants({ variant: "ghost", className: "text-primary hover:text-amber-700 mt-4" })}>View Syllabus &rarr;</Link>
                 </CardContent>
               </Card>
             </TiltWrapper>
@@ -195,7 +195,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="bg-slate-900 py-20 text-center">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white">Ready to Secure Your Board Results?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground">Ready to Secure Your Board Results?</h2>
           <p className="text-xl text-slate-300">Enroll today and get immediate access to premium video lectures, notes, and MCQ tests.</p>
           <Link href="/enroll" className={buttonVariants({ size: "lg", className: "!bg-amber-500 hover:!bg-amber-600 !text-foreground font-bold text-lg px-10 py-6" })}>Enroll Now for 2026 Batch</Link>
         </div>

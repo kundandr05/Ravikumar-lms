@@ -75,7 +75,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       {/* Mobile Sidebar Overlay */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          className="fixed inset-0 bg-foreground/50 z-40 md:hidden" 
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -121,7 +121,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                         <Link 
                           key={item.name}
                           href={item.href}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-amber-600 text-white shadow-sm' : 'hover:bg-accent hover:text-accent-foreground'}`}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-accent hover:text-accent-foreground'}`}
                           onClick={() => setIsMobileOpen(false)}
                         >
                           <svg className={`w-5 h-5 shrink-0 ${isActive ? 'text-amber-100' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">

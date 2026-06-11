@@ -94,7 +94,7 @@ export default function AdminEnrollmentsPage() {
                   {enrollments.map((enrollment) => (
                     <tr key={enrollment.enrollmentId} className="hover:bg-muted/50 transition-colors">
                       <td className="py-4 font-medium text-foreground">
-                        <Link href={`/dashboard/admin/students/${enrollment.studentId}`} className="hover:text-amber-600 hover:underline transition-colors">
+                        <Link href={`/dashboard/admin/students/${enrollment.studentId}`} className="hover:text-primary hover:underline transition-colors">
                           {enrollment.studentName}
                         </Link>
                       </td>

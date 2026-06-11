@@ -96,7 +96,7 @@ export default function StudentTestsPage() {
                 <Card key={test.testId} className="flex flex-col hover:shadow-lg transition-shadow border-slate-200">
                   <div className="bg-slate-900 h-2 w-full rounded-t-xl"></div>
                   <CardContent className="p-6 flex flex-col flex-1">
-                    <div className="text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wider">{test.courseName}</div>
+                    <div className="text-xs font-semibold text-primary mb-2 uppercase tracking-wider">{test.courseName}</div>
                     <h3 className="text-xl font-bold text-foreground mb-2">{test.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{test.description}</p>
                     

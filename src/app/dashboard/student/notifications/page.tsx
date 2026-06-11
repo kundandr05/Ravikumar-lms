@@ -117,7 +117,7 @@ export default function StudentNotificationsPage() {
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         </div>
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-primary">
                           <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                         </div>
                       )}

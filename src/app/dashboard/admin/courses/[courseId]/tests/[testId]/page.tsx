@@ -94,7 +94,7 @@ export default function AdminTestDetailsPage({ params }: { params: Promise<{ cou
         <Button variant="destructive" onClick={handleDeleteTest}>Delete Test</Button>
       </div>
 
-      <Card className="bg-slate-900 text-white border-0">
+      <Card className="bg-card text-card-foreground border">
         <CardContent className="p-8">
           <div className="flex justify-between items-start">
             <div className="space-y-2">

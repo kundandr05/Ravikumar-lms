@@ -175,7 +175,7 @@ export default function EnrollPage() {
               
               <div className="mt-6 text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/login" className="text-amber-600 hover:underline font-medium">
+                <Link href="/login" className="text-primary hover:underline font-medium">
                   Login here
                 </Link>
               </div>

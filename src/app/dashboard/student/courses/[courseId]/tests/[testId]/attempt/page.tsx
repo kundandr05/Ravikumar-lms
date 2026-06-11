@@ -144,7 +144,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24">
       {/* Sticky Header with Timer */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-white p-4 flex justify-between items-center px-6">
+      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-primary-foreground p-4 flex justify-between items-center px-6">
         <div>
           <h2 className="font-bold text-lg">{testData.title}</h2>
           <p className="text-xs text-muted-foreground">{questions.length} Questions</p>

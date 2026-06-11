@@ -45,21 +45,21 @@ export function ThemeToggle() {
         <div className="absolute right-0 mt-2 w-36 bg-card text-card-foreground border border-slate-200 dark:border-slate-800 rounded-md shadow-lg overflow-hidden z-50 py-1">
           <button
             onClick={() => { setTheme('light'); setIsOpen(false); }}
-            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'light' ? 'text-amber-600 font-medium' : 'text-foreground dark:text-slate-300'}`}
+            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'light' ? 'text-primary font-medium' : 'text-foreground dark:text-slate-300'}`}
           >
             <Sun className="w-4 h-4 mr-2" />
             Light
           </button>
           <button
             onClick={() => { setTheme('dark'); setIsOpen(false); }}
-            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'dark' ? 'text-amber-600 font-medium' : 'text-foreground dark:text-slate-300'}`}
+            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'dark' ? 'text-primary font-medium' : 'text-foreground dark:text-slate-300'}`}
           >
             <Moon className="w-4 h-4 mr-2" />
             Dark
           </button>
           <button
             onClick={() => { setTheme('system'); setIsOpen(false); }}
-            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'system' ? 'text-amber-600 font-medium' : 'text-foreground dark:text-slate-300'}`}
+            className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-muted dark:hover:bg-slate-800 transition-colors ${theme === 'system' ? 'text-primary font-medium' : 'text-foreground dark:text-slate-300'}`}
           >
             <Monitor className="w-4 h-4 mr-2" />
             System

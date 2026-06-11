@@ -58,7 +58,7 @@ export default function StudentResultsPage() {
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 90) return 'text-green-600 bg-green-100';
-    if (percentage >= 75) return 'text-amber-600 bg-amber-100';
+    if (percentage >= 75) return 'text-primary bg-amber-100';
     if (percentage >= 60) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
   };

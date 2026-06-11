@@ -20,7 +20,7 @@ export default function CoursesPage() {
           <Card className="border-t-4 border-t-amber-500 shadow-lg">
             <CardHeader className="bg-muted border-b pb-8 pt-8 text-center space-y-4">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-3xl font-bold text-amber-600">EN</span>
+                <span className="text-3xl font-bold text-primary">EN</span>
               </div>
               <CardTitle className="text-3xl">Class 10 English</CardTitle>
               <p className="text-muted-foreground">Language and Literature</p>
@@ -55,7 +55,7 @@ export default function CoursesPage() {
           <Card className="border-t-4 border-t-amber-500 shadow-lg">
             <CardHeader className="bg-muted border-b pb-8 pt-8 text-center space-y-4">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-3xl font-bold text-amber-600">SST</span>
+                <span className="text-3xl font-bold text-primary">SST</span>
               </div>
               <CardTitle className="text-3xl">Class 10 Social Science</CardTitle>
               <p className="text-muted-foreground">History, Geography, Civics & Economics</p>

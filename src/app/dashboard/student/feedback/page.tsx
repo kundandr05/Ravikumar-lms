@@ -244,7 +244,7 @@ export default function StudentFeedbackPage() {
                   {fb.adminReply && (
                     <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
                       <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                         <span className="font-bold text-amber-900 text-sm">Admin Reply</span>

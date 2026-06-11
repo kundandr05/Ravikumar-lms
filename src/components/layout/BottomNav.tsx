@@ -37,7 +37,7 @@ export function BottomNav() {
               key={item.name} 
               href={item.href}
               className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-amber-600' : 'text-muted-foreground hover:text-foreground'
+                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <div className={`p-1 rounded-full ${isActive ? 'bg-amber-50' : ''}`}>

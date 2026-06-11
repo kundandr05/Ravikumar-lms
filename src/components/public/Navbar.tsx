@@ -12,27 +12,27 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white dark:bg-slate-900 border-b dark:border-slate-800 sticky top-0 z-50 transition-colors">
+    <nav className="bg-background dark:bg-slate-900 border-b dark:border-slate-800 sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2">
               <Image src="/logo.png" alt="RaviClasses Logo" width={32} height={32} className="rounded-md" />
-              <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Ravi<span className="text-amber-600">Classes</span>
+              <span className="text-2xl font-bold text-slate-900  tracking-tight">
+                Ravi<span className="text-primary">Classes</span>
               </span>
             </Link>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex space-x-8 items-center">
-            <Link href="/" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Home</Link>
-            <Link href="/about" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">About</Link>
-            <Link href="/courses" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Courses</Link>
-            <Link href="/results" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Results</Link>
-            <Link href="/reviews" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Reviews</Link>
-            <Link href="/contact" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium">Contact</Link>
+            <Link href="/" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">Home</Link>
+            <Link href="/about" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">About</Link>
+            <Link href="/courses" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">Courses</Link>
+            <Link href="/results" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">Results</Link>
+            <Link href="/reviews" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">Reviews</Link>
+            <Link href="/contact" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground font-medium">Contact</Link>
           </div>
 
           {/* Actions */}
@@ -43,7 +43,7 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login" className={buttonVariants({ variant: "ghost", className: "dark:text-slate-200 dark:hover:bg-slate-800" })}>Login</Link>
-                <Link href="/enroll" className={buttonVariants({ className: "bg-amber-600 hover:bg-amber-700 text-white" })}>Enroll Now</Link>
+                <Link href="/enroll" className={buttonVariants({ className: "bg-primary hover:bg-primary/90 text-primary-foreground" })}>Enroll Now</Link>
               </>
             )}
           </div>
@@ -53,7 +53,7 @@ export default function Navbar() {
             <ThemeToggle />
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:outline-none"
+              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground focus:outline-none"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isMobileMenuOpen ? (
@@ -69,14 +69,14 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-slate-900 border-b dark:border-slate-800 border-t dark:border-slate-800 transition-colors">
+        <div className="md:hidden bg-background dark:bg-slate-900 border-b dark:border-slate-800 border-t dark:border-slate-800 transition-colors">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Home</Link>
-            <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">About</Link>
-            <Link href="/courses" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Courses</Link>
-            <Link href="/results" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Results</Link>
-            <Link href="/reviews" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Reviews</Link>
-            <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Contact</Link>
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">Home</Link>
+            <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">About</Link>
+            <Link href="/courses" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">Courses</Link>
+            <Link href="/results" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">Results</Link>
+            <Link href="/reviews" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">Reviews</Link>
+            <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-primary-foreground hover:bg-slate-50 dark:hover:bg-slate-800">Contact</Link>
             
             <div className="mt-4 pt-4 border-t dark:border-slate-800 px-3 space-y-2">
               {appUser ? (
@@ -84,7 +84,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link href="/login" className={buttonVariants({ variant: "outline", className: "w-full dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800" })}>Login</Link>
-                  <Link href="/enroll" className={buttonVariants({ className: "w-full bg-amber-600 hover:bg-amber-700 text-white" })}>Enroll Now</Link>
+                  <Link href="/enroll" className={buttonVariants({ className: "w-full bg-primary hover:bg-primary/90 text-primary-foreground" })}>Enroll Now</Link>
                 </>
               )}
             </div>

@@ -96,7 +96,7 @@ export default function AdminAnnouncementsPage() {
                           {ann.createdAt?.toDate ? ann.createdAt.toDate().toLocaleString() : 'Unknown Date'}
                         </span>
                         {ann.scheduledFor && (
-                          <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-center">
+                          <span className="text-primary bg-amber-50 px-2 py-1 rounded flex items-center">
                             Scheduled: {ann.scheduledFor?.toDate ? ann.scheduledFor.toDate().toLocaleString() : ''}
                           </span>
                         )}

@@ -134,7 +134,7 @@ export default function AdminFeedbackPage() {
         <Card>
           <CardContent className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Pending</p>
-            <p className="text-3xl font-bold text-amber-600 mt-2">{stats.pending}</p>
+            <p className="text-3xl font-bold text-primary mt-2">{stats.pending}</p>
           </CardContent>
         </Card>
         <Card>
@@ -245,7 +245,7 @@ export default function AdminFeedbackPage() {
 
       {/* Reply Modal */}
       {selectedFeedback && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-foreground/60 z-50 flex items-center justify-center p-4">
           <div className="bg-card text-card-foreground rounded-xl shadow-xl max-w-2xl w-full flex flex-col max-h-[90vh]">
             <div className="p-6 border-b flex justify-between items-center bg-muted/50 rounded-t-xl">
               <div>

@@ -79,12 +79,12 @@ export default function StudentPreTestPage({ params }: { params: Promise<{ cours
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-8">
-      <Link href={`/dashboard/student/courses/${courseId}`} className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
+      <Link href={`/dashboard/student/courses/${courseId}`} className="text-primary hover:text-amber-700 text-sm font-medium flex items-center gap-1">
         &larr; Back to Course
       </Link>
 
       <Card className="border-0 shadow-lg overflow-hidden">
-        <div className="bg-slate-900 text-white p-8">
+        <div className="bg-card text-card-foreground p-8">
           <h1 className="text-3xl font-bold mb-2">{testData.title}</h1>
           <p className="text-slate-300">{testData.description}</p>
         </div>
@@ -135,7 +135,7 @@ export default function StudentPreTestPage({ params }: { params: Promise<{ cours
                 Start Test Now
               </Link>
             ) : (
-              <div className="text-amber-600 bg-amber-50 p-4 rounded-lg font-medium">
+              <div className="text-primary bg-amber-50 p-4 rounded-lg font-medium">
                 This test has no questions yet. Please check back later.
               </div>
             )}

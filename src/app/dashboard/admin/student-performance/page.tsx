@@ -106,7 +106,7 @@ export default function StudentPerformancePage() {
                     <tr key={perf.uid} className="hover:bg-muted/50 transition-colors">
                       <td className="py-4 font-medium text-muted-foreground">#{index + 1}</td>
                       <td className="py-4 font-bold text-foreground">
-                        <Link href={`/dashboard/admin/students/${perf.uid}`} className="hover:text-amber-600 hover:underline transition-colors">
+                        <Link href={`/dashboard/admin/students/${perf.uid}`} className="hover:text-primary hover:underline transition-colors">
                           {perf.name}
                         </Link>
                         <div className="text-xs text-muted-foreground font-normal">{perf.email}</div>
@@ -118,7 +118,7 @@ export default function StudentPerformancePage() {
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`font-bold ${perf.averageScore >= 80 ? 'text-green-600' : perf.averageScore >= 60 ? 'text-amber-600' : perf.totalTests > 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                          <span className={`font-bold ${perf.averageScore >= 80 ? 'text-green-600' : perf.averageScore >= 60 ? 'text-primary' : perf.totalTests > 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
                             {perf.totalTests > 0 ? `${perf.averageScore}%` : 'N/A'}
                           </span>
                         </div>

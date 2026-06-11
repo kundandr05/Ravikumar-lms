@@ -120,7 +120,7 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ stude
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/dashboard/admin/enrollments" className="text-amber-600 hover:underline text-sm font-medium mb-2 inline-block">&larr; Back to Enrollments</Link>
+          <Link href="/dashboard/admin/enrollments" className="text-primary hover:underline text-sm font-medium mb-2 inline-block">&larr; Back to Enrollments</Link>
           <h1 className="text-3xl font-bold text-foreground">Student Profile</h1>
         </div>
       </div>

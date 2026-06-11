@@ -22,7 +22,7 @@ export default function ResultsPage() {
         </div>
 
         {/* Highlight Banner */}
-        <div className="bg-amber-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-xl">
+        <div className="bg-amber-600 rounded-3xl p-8 md:p-12 text-center text-primary-foreground shadow-xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Highest Score Achieved</h2>
           <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 mt-8">
             <div className="space-y-2">
@@ -54,7 +54,7 @@ export default function ResultsPage() {
                     <p className="text-sm text-muted-foreground">Class of {topper.year}</p>
                   </div>
                   <div className="pt-4 border-t border-slate-100">
-                    <span className="text-3xl font-black text-amber-600">{topper.score}</span>
+                    <span className="text-3xl font-black text-primary">{topper.score}</span>
                     <p className="text-sm font-medium text-foreground">{topper.subject}</p>
                   </div>
                 </CardContent>

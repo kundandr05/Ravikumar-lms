@@ -175,14 +175,14 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <Link href={`/dashboard/student/courses/${courseId}`} className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
+      <Link href={`/dashboard/student/courses/${courseId}`} className="text-primary hover:text-amber-700 text-sm font-medium flex items-center gap-1">
         &larr; Back to {course?.title || 'Course'}
       </Link>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Player Area */}
         <div className="flex-1 space-y-6">
-          <div className="bg-black aspect-video rounded-xl overflow-hidden shadow-lg border border-slate-800">
+          <div className="bg-foreground aspect-video rounded-xl overflow-hidden shadow-lg border border-slate-800">
             {embedUrl ? (
               <iframe
                 src={`${embedUrl}?rel=0&modestbranding=1`}
@@ -285,7 +285,7 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
                     href={`/dashboard/student/courses/${courseId}/lessons/${l.lessonId}`}
                     className={`flex gap-3 p-4 hover:bg-muted/50 transition-colors ${isActive ? 'bg-amber-50 hover:bg-amber-50' : ''}`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-amber-600 text-white' : 'bg-slate-200 text-muted-foreground'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-primary text-primary-foreground' : 'bg-slate-200 text-muted-foreground'}`}>
                       {isActive ? (
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
                       ) : (

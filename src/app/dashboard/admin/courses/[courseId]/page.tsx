@@ -95,7 +95,7 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
         <Button variant="outline" onClick={() => router.push('/dashboard/admin/courses')}>Back to Courses</Button>
       </div>
 
-      <Card className="bg-slate-900 text-white border-0">
+      <Card className="bg-card text-card-foreground border">
         <CardContent className="p-8 md:p-10 flex flex-col md:flex-row gap-8 items-center">
           {course.thumbnail && (
             <img src={course.thumbnail} alt={course.title} className="w-full md:w-1/3 rounded-lg object-cover aspect-video shadow-lg" />
@@ -107,7 +107,7 @@ export default function AdminCourseDetailsPage({ params }: { params: Promise<{ c
               <Link href={`/dashboard/admin/courses/${courseId}/edit`} className={buttonVariants({ variant: "secondary" })}>
                 Edit Course Details
               </Link>
-              <Link href={`/dashboard/admin/courses/${courseId}/media`} className={buttonVariants({ variant: "default", className: "bg-blue-600 hover:bg-blue-700 text-white" })}>
+              <Link href={`/dashboard/admin/courses/${courseId}/media`} className={buttonVariants({ variant: "default", className: "bg-blue-600 hover:bg-blue-700 text-primary-foreground" })}>
                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                 Media Manager
               </Link>

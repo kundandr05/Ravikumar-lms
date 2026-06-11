@@ -138,7 +138,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Edit Modal */}
       {editingMedia && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md bg-card text-card-foreground shadow-xl">
             <CardHeader>
               <CardTitle>Edit Content Details</CardTitle>
@@ -155,7 +155,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
               </div>
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" className="flex-1" onClick={() => setEditingMedia(null)} disabled={savingEdit}>Cancel</Button>
-                <Button className="flex-1 bg-amber-600 hover:bg-amber-700 text-white" onClick={handleSaveEdit} disabled={savingEdit}>
+                <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleSaveEdit} disabled={savingEdit}>
                   {savingEdit ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
@@ -167,7 +167,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/dashboard/admin/courses" className="hover:text-amber-600 transition-colors">Courses</Link>
+            <Link href="/dashboard/admin/courses" className="hover:text-primary transition-colors">Courses</Link>
             <span>/</span>
             <span>Course Media</span>
           </div>
@@ -321,7 +321,7 @@ export default function CourseMediaManager({ params }: { params: Promise<{ cours
                                 </a>
                                 <button 
                                   onClick={() => handleEditClick(media)}
-                                  className="p-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                  className="p-2 text-muted-foreground hover:text-primary hover:bg-amber-50 rounded transition-colors"
                                   title="Edit Name/Chapter"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>

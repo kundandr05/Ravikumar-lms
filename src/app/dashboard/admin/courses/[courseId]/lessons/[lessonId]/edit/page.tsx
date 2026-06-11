@@ -127,7 +127,7 @@ export default function EditLessonPage({ params }: { params: Promise<{ courseId:
             <div className="space-y-2 pt-4 border-t">
               <Label htmlFor="pdfNotes">Update PDF Notes (Google Drive Link)</Label>
               {existingPdf && existingPdf !== notesPdfUrl && (
-                <div className="mb-2 text-sm text-amber-600">
+                <div className="mb-2 text-sm text-primary">
                   Current link will be replaced with the new one.
                 </div>
               )}

@@ -62,7 +62,7 @@ export function SplashIntro({ children }: { children: React.ReactNode }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.5 }}
-                className="text-4xl md:text-6xl font-extrabold text-white mt-8 tracking-tight text-center"
+                className="text-4xl md:text-6xl font-extrabold text-primary-foreground mt-8 tracking-tight text-center"
               >
                 Welcome to <span className="text-amber-500">RaviClasses</span>
               </motion.h1>

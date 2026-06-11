@@ -129,11 +129,11 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <Link href="/dashboard/student/courses" className="text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1">
+      <Link href="/dashboard/student/courses" className="text-primary hover:text-amber-700 text-sm font-medium flex items-center gap-1">
         &larr; Back to My Courses
       </Link>
 
-      <Card className="bg-slate-900 text-white border-0 overflow-hidden relative shadow-lg">
+      <Card className="bg-card text-card-foreground border overflow-hidden relative shadow-lg">
         {course.thumbnail && (
           <div className="absolute inset-0 opacity-20 bg-cover bg-center" style={{ backgroundImage: `url(${course.thumbnail})` }} />
         )}
@@ -231,7 +231,7 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
                                   {media.fileExtension || media.type}
                                 </div>
                               </div>
-                              <div className="shrink-0 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                               </div>
                             </CardContent>

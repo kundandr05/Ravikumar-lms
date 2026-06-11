@@ -83,7 +83,7 @@ export default function AdminStudentsPage() {
           <h1 className="text-3xl font-bold text-foreground">Student Directory</h1>
           <p className="text-muted-foreground mt-2">Manage all registered students on the platform.</p>
         </div>
-        <Button onClick={downloadCSV} disabled={students.length === 0 || loading} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+        <Button onClick={downloadCSV} disabled={students.length === 0 || loading} className="bg-emerald-600 hover:bg-emerald-700 text-primary-foreground flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
@@ -117,7 +117,7 @@ export default function AdminStudentsPage() {
                   {students.map((student) => (
                     <tr key={student.uid} className="hover:bg-muted/50 transition-colors">
                       <td className="py-4 font-medium text-foreground">
-                        <Link href={`/dashboard/admin/students/${student.uid}`} className="hover:text-amber-600 hover:underline transition-colors">
+                        <Link href={`/dashboard/admin/students/${student.uid}`} className="hover:text-primary hover:underline transition-colors">
                           {student.name}
                         </Link>
                       </td>
