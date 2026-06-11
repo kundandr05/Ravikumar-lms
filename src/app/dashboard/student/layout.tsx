@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const { appUser, loading, logout } = useAuth();
@@ -166,16 +168,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             <div className="font-bold text-slate-900 md:hidden">Student Dashboard</div>
             <div className="hidden md:block font-medium text-slate-500">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}</div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <NotificationBell />
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8 pb-24 md:pb-8">
           {children}
         </div>
       </main>
+      <BottomNav />
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

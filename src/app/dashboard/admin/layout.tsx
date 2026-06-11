@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { appUser, loading, logout } = useAuth();
@@ -169,18 +171,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Mobile Header */}
         <header className="bg-white border-b h-16 flex items-center justify-between px-4 md:hidden shrink-0 shadow-sm z-10">
           <div className="font-bold text-slate-900">Admin Panel</div>
-          <button onClick={() => setIsMobileOpen(true)} className="text-slate-600 focus:outline-none p-2 rounded-md hover:bg-slate-100">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <button onClick={() => setIsMobileOpen(true)} className="text-slate-600 focus:outline-none p-2 rounded-md hover:bg-slate-100">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8 pb-24 md:pb-8">
           {children}
         </div>
       </main>
+      <BottomNav />
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const { appUser } = useAuth();
@@ -32,6 +33,7 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             {appUser ? (
               <Link href={`/dashboard/${appUser.role}`} className={buttonVariants()}>Dashboard</Link>
             ) : (
@@ -42,8 +44,9 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile menu button & Theme toggle */}
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-slate-600 hover:text-slate-900 focus:outline-none"
