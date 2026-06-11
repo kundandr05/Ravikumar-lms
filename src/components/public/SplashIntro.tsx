@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 export function SplashIntro({ children }: { children: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(true);
@@ -42,15 +43,8 @@ export function SplashIntro({ children }: { children: React.ReactNode }) {
               transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
               className="relative z-10 flex flex-col items-center"
             >
-              <div className="text-8xl md:text-9xl relative">
-                👨‍🎓
-                <motion.div
-                  className="absolute -right-8 -top-4 text-7xl md:text-8xl origin-bottom-left"
-                  animate={{ rotate: [0, 20, -10, 20, -10, 0] }}
-                  transition={{ duration: 1.5, delay: 0.8, repeat: Infinity, repeatDelay: 1 }}
-                >
-                  👋
-                </motion.div>
+              <div className="text-8xl md:text-9xl relative mb-4">
+                <Image src="/logo.png" alt="RaviClasses Logo" width={120} height={120} className="rounded-2xl shadow-2xl" />
               </div>
               
               <motion.h1 
