@@ -33,7 +33,7 @@ export default function LockedTestsReviewPage() {
   const fetchLocked = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'testAttempts'), where('status', '==', 'LOCKED_FOR_REVIEW'));
+      const q = query(collection(db, 'testAttempts'), where('status', 'in', ['LOCKED_FOR_REVIEW', 'NEEDS_REVIEW']));
       const snap = await getDocs(q);
       
       const attempts: LockedAttempt[] = [];
@@ -49,11 +49,17 @@ export default function LockedTestsReviewPage() {
         const logsQ = query(
           collection(db, 'testViolations'), 
           where('testId', '==', attempt.testId),
-          where('studentId', '==', attempt.studentId),
-          orderBy('timestamp', 'desc')
+          where('studentId', '==', attempt.studentId)
         );
         const logsSnap = await getDocs(logsQ);
         const logs = logsSnap.docs.map(l => l.data());
+        
+        // Sort locally to avoid requiring a composite index
+        logs.sort((a, b) => {
+          const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+          const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+          return timeB - timeA;
+        });
 
         attempts.push({
           ...attempt,
@@ -133,9 +139,9 @@ export default function LockedTestsReviewPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {lockedAttempts.map(attempt => (
-            <Card key={attempt.attemptId} className="border-red-200 shadow-sm overflow-hidden">
-              <div className="bg-red-500 text-white px-6 py-2 text-sm font-bold flex justify-between">
-                <span>LOCKED FOR REVIEW</span>
+            <Card key={attempt.attemptId} className={`border-2 shadow-sm overflow-hidden ${attempt.status === 'LOCKED_FOR_REVIEW' ? 'border-red-200' : 'border-amber-200'}`}>
+              <div className={`text-white px-6 py-2 text-sm font-bold flex justify-between ${attempt.status === 'LOCKED_FOR_REVIEW' ? 'bg-red-500' : 'bg-amber-500'}`}>
+                <span>{attempt.status === 'LOCKED_FOR_REVIEW' ? 'LOCKED FOR REVIEW' : 'FLAGGED FOR REVIEW'}</span>
                 <span>{attempt.submittedAt?.toDate ? format(attempt.submittedAt.toDate(), 'PP p') : 'Unknown Time'}</span>
               </div>
               <CardContent className="p-6">

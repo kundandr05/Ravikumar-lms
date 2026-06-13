@@ -247,7 +247,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         score,
         totalScore,
         passed: score >= (testData.passingMarks || 0),
-        status: 'COMPLETED',
+        status: violationCount > 0 ? 'NEEDS_REVIEW' : 'COMPLETED',
         violationCount,
         submittedAt: serverTimestamp(),
         answers

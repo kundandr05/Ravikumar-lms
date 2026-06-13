@@ -182,11 +182,17 @@ export default function StudentTestsDashboard() {
             )}
 
             {type === 'completed' && test.attempt && (
-              <div className={`flex items-center text-sm font-bold p-2 rounded ${test.attempt.status === 'LOCKED_FOR_REVIEW' ? 'text-red-700 bg-red-100' : 'text-green-700 bg-green-100'}`}>
+              <div className={`flex items-center text-sm font-bold p-2 rounded ${
+                test.attempt.status === 'LOCKED_FOR_REVIEW' ? 'text-red-700 bg-red-100' : 
+                test.attempt.status === 'NEEDS_REVIEW' ? 'text-amber-700 bg-amber-100' :
+                'text-green-700 bg-green-100'
+              }`}>
                 {test.attempt.status === 'LOCKED_FOR_REVIEW' ? (
                   <><AlertCircle className="w-4 h-4 mr-2" /> Locked (Integrity Violation)</>
+                ) : test.attempt.status === 'NEEDS_REVIEW' ? (
+                  <><AlertCircle className="w-4 h-4 mr-2" /> Pending Admin Approval</>
                 ) : (
-                  <><CheckCircle className="w-4 h-4 mr-2" /> Completed: {test.attempt.score} / {test.attempt.totalQuestions}</>
+                  <><CheckCircle className="w-4 h-4 mr-2" /> Completed: {test.attempt.score} / {test.attempt.totalQuestions || test.attempt.totalScore}</>
                 )}
               </div>
             )}
