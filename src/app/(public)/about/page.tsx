@@ -2,8 +2,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About Ravi Sir',
-  description: 'Learn more about Ravikumar D, his 17+ years of teaching experience, and his proven methodology for CBSE Class 10 success.',
+  title: 'About Us | RaviClasses',
+  description: 'Learn about RaviClasses, our 17+ years of teaching excellence, and our mission to provide the best Class 10 coaching.',
+  alternates: {
+    canonical: 'https://ravikumar-lms.vercel.app/about',
+  }
 };
 
 export default function AboutPage() {

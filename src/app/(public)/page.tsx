@@ -7,8 +7,11 @@ import { SplashIntro } from '@/components/public/SplashIntro';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Home',
-  description: 'Master Class 10 with Ravikumar\'s Expert Guidance. 17+ Years of Excellence in English & Social Science.',
+  title: 'RaviClasses LMS | Class 10 Expert Coaching',
+  description: 'Welcome to RaviClasses. Empowering Class 10 students with comprehensive learning tools and expert guidance.',
+  alternates: {
+    canonical: 'https://ravikumar-lms.vercel.app/',
+  }
 };
 
 export default function HomePage() {

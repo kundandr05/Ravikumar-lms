@@ -1,8 +1,11 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with Ravi Classes for CBSE Class 10 tuition queries, admissions, and support.',
+  title: 'Contact Us | RaviClasses',
+  description: 'Get in touch with RaviClasses for admission inquiries, support, and guidance for Class 10 coaching.',
+  alternates: {
+    canonical: 'https://ravikumar-lms.vercel.app/contact',
+  }
 };
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

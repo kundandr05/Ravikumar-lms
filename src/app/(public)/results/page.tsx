@@ -1,4 +1,13 @@
+import { Metadata } from "next";
 import { Card, CardContent } from '@/components/ui/card';
+
+export const metadata: Metadata = {
+  title: "Student Results | RaviClasses",
+  description: "View the outstanding board exam results and success stories of our Class 10 students at RaviClasses.",
+  alternates: {
+    canonical: "https://ravikumar-lms.vercel.app/results",
+  }
+};
 
 export default function ResultsPage() {
   const toppers = [

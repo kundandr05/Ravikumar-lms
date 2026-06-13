@@ -16,19 +16,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ravikumar-lms.vercel.app'),
   title: {
     template: '%s | Ravi Classes',
-    default: 'Ravi Classes - CBSE Class 10 Excellence',
+    default: 'RaviClasses LMS | Class 10 Expert Coaching',
   },
-  description: "Empowering CBSE Class 10 students with 17+ years of teaching excellence in English and Social Science.",
-  keywords: ["CBSE", "Class 10", "English", "Social Science", "Ravi Classes", "Online Learning", "Mysuru"],
+  description: "RaviClasses LMS provides expert coaching for Class 10 students with courses, study materials, online tests, progress tracking, and live learning support.",
+  keywords: ["Class 10 Coaching", "Online LMS", "Ravi Classes", "English Coaching", "Social Science Coaching", "Board Exam Preparation", "Student Learning Platform", "Online Classes India"],
+  authors: [{ name: "RaviClasses" }],
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: 'https://ravikumar-lms.vercel.app',
+  },
   openGraph: {
-    title: 'Ravi Classes',
-    description: 'Empowering CBSE Class 10 students with 17+ years of teaching excellence in English and Social Science.',
-    url: 'https://raviclasses.com',
-    siteName: 'Ravi Classes',
+    title: 'RaviClasses LMS | Class 10 Expert Coaching',
+    description: 'RaviClasses LMS provides expert coaching for Class 10 students with courses, study materials, online tests, progress tracking, and live learning support.',
+    url: 'https://ravikumar-lms.vercel.app',
+    siteName: 'RaviClasses',
     locale: 'en_IN',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'RaviClasses LMS - Class 10 Excellence',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RaviClasses LMS | Class 10 Expert Coaching',
+    description: 'RaviClasses LMS provides expert coaching for Class 10 students with courses, study materials, online tests, progress tracking, and live learning support.',
+    images: ['/og-image.jpg'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -64,6 +87,33 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground dark:bg-slate-900 dark:text-slate-100 transition-colors">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "EducationalOrganization",
+                  "@id": "https://ravikumar-lms.vercel.app/#organization",
+                  "name": "RaviClasses",
+                  "url": "https://ravikumar-lms.vercel.app",
+                  "logo": "https://ravikumar-lms.vercel.app/icons/icon-512x512.png",
+                  "sameAs": []
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://ravikumar-lms.vercel.app/#website",
+                  "url": "https://ravikumar-lms.vercel.app",
+                  "name": "RaviClasses LMS",
+                  "publisher": {
+                    "@id": "https://ravikumar-lms.vercel.app/#organization"
+                  }
+                }
+              ]
+            })
+          }}
+        />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <PwaRegister />
           <AuthProvider>
