@@ -107,8 +107,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         Telemetry.logTimelineEvent({
           studentId: appUser.uid,
           type: 'TEST_STARTED',
-          details: `Started test: ${tData.title}`,
-          metadata: { testId }
+          description: `Started test: ${tData.title}`
         });
 
       } catch (error) {
@@ -219,8 +218,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
       Telemetry.logTimelineEvent({
         studentId: appUserRef.current.uid,
         type: 'TEST_LOCKED',
-        details: `Test Locked: ${testData.title} (Integrity Violation)`,
-        metadata: { testId }
+        description: `Test Locked: ${testData.title} (Integrity Violation)`
       });
 
     } catch (error) {
@@ -257,9 +255,8 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
       
       Telemetry.logTimelineEvent({
         studentId: appUser.uid,
-        type: 'TEST_SUBMIT',
-        details: `Submitted test: ${testData.title} (${score}/${totalScore})`,
-        metadata: { testId }
+        type: 'TEST_SUBMITTED',
+        description: `Submitted test: ${testData.title} (${score}/${totalScore})`
       });
 
       alert(`Test Submitted! You scored ${score}/${totalScore}`);

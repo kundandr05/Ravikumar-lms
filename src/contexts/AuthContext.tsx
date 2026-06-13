@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [loginHistoryId, setLoginHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,19 +53,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Log session if not already logged in this tab session
             if (typeof window !== 'undefined' && !sessionStorage.getItem('session_logged_' + firebaseUser.uid)) {
               if (userData.role === 'student') {
-                const sId = await Telemetry.logSessionStart(firebaseUser.uid);
-                if (sId) {
-                  setSessionId(sId.sessionId);
-                  setLoginHistoryId(sId.loginHistoryId);
-                  sessionStorage.setItem('current_session_id', sId.sessionId);
-                  sessionStorage.setItem('current_login_history_id', sId.loginHistoryId);
+                const lhId = await Telemetry.logLogin(firebaseUser.uid);
+                if (lhId) {
+                  setLoginHistoryId(lhId);
+                  sessionStorage.setItem('current_login_history_id', lhId);
                 }
               }
               sessionStorage.setItem('session_logged_' + firebaseUser.uid, 'true');
             } else if (typeof window !== 'undefined') {
-              const existingSId = sessionStorage.getItem('current_session_id');
               const existingLHId = sessionStorage.getItem('current_login_history_id');
-              if (existingSId) setSessionId(existingSId);
               if (existingLHId) setLoginHistoryId(existingLHId);
             }
           } else {
@@ -78,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setAppUser(null);
-        setSessionId(null);
         setLoginHistoryId(null);
       }
       
@@ -91,18 +85,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Handle tab closing
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (appUser?.uid && sessionId) {
-        Telemetry.logSessionEnd(appUser.uid, sessionId, loginHistoryId || undefined);
+      if (appUser?.uid && loginHistoryId) {
+        Telemetry.logLogout(appUser.uid, loginHistoryId);
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [appUser, sessionId, loginHistoryId]);
+  }, [appUser, loginHistoryId]);
 
   const logout = async () => {
-    if (appUser?.uid && sessionId) {
-      await Telemetry.logSessionEnd(appUser.uid, sessionId, loginHistoryId || undefined);
-      sessionStorage.removeItem('current_session_id');
+    if (appUser?.uid && loginHistoryId) {
+      await Telemetry.logLogout(appUser.uid, loginHistoryId);
       sessionStorage.removeItem('current_login_history_id');
       sessionStorage.removeItem('session_logged_' + appUser.uid);
     }

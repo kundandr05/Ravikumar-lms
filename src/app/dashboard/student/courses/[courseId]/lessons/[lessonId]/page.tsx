@@ -26,74 +26,7 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
-  
-  const playerRef = useRef<YouTubePlayer | null>(null);
-  
-  // Tracking
-  const watchTimeRef = useRef<number>(0);
-  const skipDurationRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const durationRef = useRef<number>(0);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const startTelemetryPolling = () => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-    pollingIntervalRef.current = setInterval(async () => {
-      if (!playerRef.current) return;
-      const currentTime = await playerRef.current.getCurrentTime();
-      if (currentTime !== undefined) {
-        const diff = currentTime - lastTimeRef.current;
-        if (diff > 2 || diff < -2) {
-          // Skip
-          skipDurationRef.current += Math.abs(diff);
-        } else if (diff > 0 && diff <= 2) {
-          watchTimeRef.current += diff;
-        }
-        lastTimeRef.current = currentTime;
-      }
-    }, 1000);
-  };
-
-  const stopTelemetryPolling = () => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-  };
-
-  const videoId = lesson?.videoUrl ? (() => {
-    let id = '';
-    const url = lesson.videoUrl;
-    if (url.includes('youtu.be/')) id = url.split('youtu.be/')[1].split('?')[0];
-    else if (url.includes('youtube.com/watch')) id = new URLSearchParams(url.split('?')[1]).get('v') || '';
-    else if (url.includes('youtube.com/embed/')) id = url.split('youtube.com/embed/')[1].split('?')[0];
-    return id;
-  })() : '';
-
-  // Log final metrics on unmount and handle Fullscreen/PiP tracking
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isFullscreen = !!document.fullscreenElement;
-      if (appUser && videoId) {
-        Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'PAUSED', {
-          fullscreen: isFullscreen
-        });
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      stopTelemetryPolling();
-      if (appUser && videoId) {
-        const watchPercentage = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
-        Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'PAUSED', {
-          watchDuration: watchTimeRef.current,
-          skippedDuration: skipDurationRef.current,
-          watchPercentage: Math.min(100, watchPercentage),
-          lastWatchedPosition: lastTimeRef.current
-        });
-      }
-    };
-  }, [appUser, courseId, videoId]);
+  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchLessonData() {
@@ -117,6 +50,8 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
           const lData = { lessonId: lessonDoc.id, ...lessonDoc.data() } as Lesson;
           setLesson(lData);
           Telemetry.logCourseAction(appUser.uid, courseId, 'LESSON_OPENED', lData.title);
+          const sId = await Telemetry.startLearningSession(appUser.uid, courseId, lessonId);
+          if (sId) setLearningSessionId(sId);
         }
 
         const lessonsQuery = query(collection(db, 'lessons'), where('courseId', '==', courseId), orderBy('order', 'asc'));
@@ -146,6 +81,15 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     fetchLessonData();
   }, [courseId, lessonId, appUser]);
 
+  useEffect(() => {
+    // End session when unmounting or leaving page
+    return () => {
+      if (appUser?.uid && learningSessionId) {
+        Telemetry.endLearningSession(appUser.uid, learningSessionId);
+      }
+    };
+  }, [appUser, learningSessionId]);
+
   const handleMarkComplete = async () => {
     if (!appUser?.uid) return;
     setMarking(true);
@@ -168,48 +112,21 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     }
   };
 
-  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-    playerRef.current = event.target;
-    durationRef.current = event.target.getDuration();
-  };
+  const videoId = lesson?.videoUrl ? (() => {
+    let id = '';
+    const url = lesson.videoUrl;
+    if (url.includes('youtu.be/')) id = url.split('youtu.be/')[1].split('?')[0];
+    else if (url.includes('youtube.com/watch')) id = new URLSearchParams(url.split('?')[1]).get('v') || '';
+    else if (url.includes('youtube.com/embed/')) id = url.split('youtube.com/embed/')[1].split('?')[0];
+    return id;
+  })() : '';
 
   const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-    if (!appUser || !videoId) return;
-
-    const getStats = () => {
-      const wp = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
-      return {
-        watchDuration: watchTimeRef.current,
-        skippedDuration: skipDurationRef.current,
-        watchPercentage: Math.min(100, wp),
-        lastWatchedPosition: lastTimeRef.current
-      };
-    };
-
-    if (event.data === YouTube.PlayerState.PLAYING) {
-      startTelemetryPolling();
-      Telemetry.logVideoEvent(appUser.uid, courseId, videoId, watchTimeRef.current === 0 ? 'STARTED' : 'RESUMED', getStats());
-    } else if (event.data === YouTube.PlayerState.PAUSED) {
-      stopTelemetryPolling();
-      Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'PAUSED', getStats());
-    } else if (event.data === YouTube.PlayerState.ENDED) {
-      stopTelemetryPolling();
-      Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'COMPLETED', getStats());
+    if (event.data === YouTube.PlayerState.ENDED) {
       if (!isCompleted) handleMarkComplete();
     }
   };
 
-  const onPlaybackRateChange: YouTubeProps['onPlaybackRateChange'] = (event) => {
-    if (!appUser || !videoId) return;
-    const wp = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
-    Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'SPEED_CHANGED', {
-      watchDuration: watchTimeRef.current,
-      skippedDuration: skipDurationRef.current,
-      watchPercentage: Math.min(100, wp),
-      playbackSpeed: event.data,
-      lastWatchedPosition: lastTimeRef.current
-    });
-  };
 
   if (loading) return <div className="p-8 text-center text-muted-foreground">Loading video lesson...</div>;
   if (!isEnrolled) return <div className="p-8 text-center text-red-500">Access Denied. You are not enrolled.</div>;
@@ -232,10 +149,9 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
               <YouTube 
                 videoId={videoId}
                 opts={{ width: '100%', height: '100%', playerVars: { autoplay: 0, modestbranding: 1, rel: 0 } }}
-                onReady={onPlayerReady}
                 onStateChange={onPlayerStateChange}
-                onPlaybackRateChange={onPlaybackRateChange}
                 className="w-full h-full"
+                iframeClassName="w-full h-full"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500">Video format not supported</div>

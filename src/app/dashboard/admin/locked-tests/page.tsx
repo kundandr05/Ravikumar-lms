@@ -81,8 +81,7 @@ export default function LockedTestsReviewPage() {
       Telemetry.logTimelineEvent({
         studentId,
         type: 'TEST_REOPENED',
-        details: `Test Unlocked by Admin for reattempt.`,
-        metadata: { testId, attemptId }
+        description: `Test Unlocked by Admin for reattempt.`
       });
 
       setLockedAttempts(prev => prev.filter(a => a.attemptId !== attemptId));

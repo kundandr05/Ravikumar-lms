@@ -5,38 +5,26 @@ import { UAParser } from 'ua-parser-js';
 export type TimelineEventType = 
   | 'LOGIN' 
   | 'LOGOUT' 
+  | 'ENROLLMENT'
   | 'COURSE_OPENED'
   | 'LESSON_OPENED'
   | 'LESSON_COMPLETED'
-  | 'STUDY_MATERIAL_VIEWED'
-  | 'STUDY_MATERIAL_DOWNLOADED'
-  | 'VIDEO_STARTED'
-  | 'VIDEO_PAUSED'
-  | 'VIDEO_RESUMED'
-  | 'VIDEO_COMPLETED'
-  | 'VIDEO_SPEED_CHANGED'
   | 'TEST_STARTED' 
-  | 'TEST_SUBMIT' 
-  | 'TEST_ASSIGNED' 
-  | 'TEST_OPENED' 
-  | 'TEST_PAUSED' 
-  | 'TEST_LOCKED' 
-  | 'TEST_REOPENED' 
-  | 'TEST_EXPIRED' 
-  | 'ASSIGNMENT_OPENED'
-  | 'ASSIGNMENT_SUBMIT' 
-  | 'COURSE_ENROLL';
+  | 'TEST_SUBMITTED' 
+  | 'TEST_REOPENED'
+  | 'TEST_LOCKED'
+  | 'ASSIGNMENT_SUBMITTED';
 
 export interface TelemetryEvent {
   studentId: string;
   type: TimelineEventType;
-  details: string;
-  metadata?: any;
+  description: string;
+  timestamp?: any;
 }
 
 export const Telemetry = {
   /**
-   * 1. STUDENT TIMELINE SYSTEM
+   * PHASE 3: STUDENT TIMELINE
    */
   async logTimelineEvent(event: TelemetryEvent) {
     try {
@@ -51,9 +39,9 @@ export const Telemetry = {
   },
 
   /**
-   * 2. LOGIN HISTORY & 3. LEARNING SESSION TRACKING
+   * PHASE 1: LOGIN TRACKING
    */
-  async logSessionStart(studentId: string) {
+  async logLogin(studentId: string) {
     try {
       if (!studentId) return null;
       
@@ -69,27 +57,13 @@ export const Telemetry = {
         browser = result.browser.name || 'Unknown';
       }
 
-      const now = new Date();
-      const loginDateStr = now.toISOString().split('T')[0];
-
-      // Record in loginHistory
       const loginRef = await addDoc(collection(db, 'loginHistory'), {
         studentId,
         loginTime: serverTimestamp(),
-        loginDate: loginDateStr,
         deviceType: device,
         os,
         browser,
         sessionDuration: 0
-      });
-
-      // Record in learningSessions
-      const sessionRef = await addDoc(collection(db, 'learningSessions'), {
-        studentId,
-        loginHistoryId: loginRef.id,
-        sessionStart: serverTimestamp(),
-        duration: 0,
-        isActive: true
       });
 
       // Update studentAnalytics aggregate
@@ -101,26 +75,81 @@ export const Telemetry = {
       await this.logTimelineEvent({
         studentId,
         type: 'LOGIN',
-        details: `Logged in from ${device} (${browser} on ${os})`,
-        metadata: { sessionId: sessionRef.id }
+        description: `Logged in from ${device} (${browser} on ${os})`
       });
 
-      return { sessionId: sessionRef.id, loginHistoryId: loginRef.id };
+      return loginRef.id;
     } catch (e) {
       console.error("Session start error:", e);
       return null;
     }
   },
 
-  async logSessionEnd(studentId: string, sessionId: string, loginHistoryId?: string) {
+  async logLogout(studentId: string, loginHistoryId: string) {
+    try {
+      if (!studentId || !loginHistoryId) return;
+      
+      const docRef = doc(db, 'loginHistory', loginHistoryId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const startTime = data.loginTime?.toDate();
+        const endTime = new Date();
+        const durationSeconds = startTime ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) : 0;
+
+        await updateDoc(docRef, {
+          logoutTime: serverTimestamp(),
+          sessionDuration: durationSeconds
+        });
+      }
+
+      await this.logTimelineEvent({
+        studentId,
+        type: 'LOGOUT',
+        description: `Logged out.`
+      });
+
+    } catch (e) {
+      console.error("Session end error:", e);
+    }
+  },
+
+  /**
+   * PHASE 2: LEARNING SESSION TRACKING
+   */
+  async startLearningSession(studentId: string, courseId: string, lessonId: string) {
+    try {
+      if (!studentId || !lessonId) return null;
+
+      const sessionRef = await addDoc(collection(db, 'learningSessions'), {
+        studentId,
+        courseId,
+        lessonId,
+        sessionStart: serverTimestamp(),
+        duration: 0,
+        isActive: true
+      });
+
+      await setDoc(doc(db, 'studentAnalytics', studentId), {
+        lastActivity: serverTimestamp()
+      }, { merge: true });
+
+      return sessionRef.id;
+    } catch (e) {
+      console.error("Learning session start error", e);
+      return null;
+    }
+  },
+
+  async endLearningSession(studentId: string, sessionId: string) {
     try {
       if (!studentId || !sessionId) return;
-      
       const sessionRef = doc(db, 'learningSessions', sessionId);
-      const sessionDoc = await getDoc(sessionRef);
-      
-      if (sessionDoc.exists()) {
-        const data = sessionDoc.data();
+      const docSnap = await getDoc(sessionRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
         if (!data.isActive) return;
 
         const startTime = data.sessionStart?.toDate();
@@ -133,98 +162,23 @@ export const Telemetry = {
           isActive: false
         });
 
-        if (loginHistoryId) {
-          await updateDoc(doc(db, 'loginHistory', loginHistoryId), {
-            logoutTime: serverTimestamp(),
-            sessionDuration: durationSeconds
-          });
-        }
-
-        // Add to aggregate learning time
         if (durationSeconds > 0) {
           await setDoc(doc(db, 'studentAnalytics', studentId), {
             totalLearningTime: increment(durationSeconds)
           }, { merge: true });
         }
       }
-
-      await this.logTimelineEvent({
-        studentId,
-        type: 'LOGOUT',
-        details: `Logged out.`,
-        metadata: { sessionId }
-      });
-
     } catch (e) {
-      console.error("Session end error:", e);
+      console.error("Learning session end error", e);
     }
   },
 
   /**
-   * 1. VIDEO ANALYTICS SYSTEM
+   * COURSE/LESSON ACTIVITY FOR TIMELINE
    */
-  async logVideoEvent(
-    studentId: string, 
-    courseId: string, 
-    lessonId: string, 
-    action: 'STARTED' | 'PAUSED' | 'RESUMED' | 'COMPLETED' | 'SPEED_CHANGED' | 'SEEK_FORWARD' | 'SEEK_BACKWARD',
-    stats: { 
-      watchDuration?: number, 
-      watchPercentage?: number, 
-      skippedDuration?: number, 
-      playbackSpeed?: number,
-      pictureInPicture?: boolean,
-      fullscreen?: boolean,
-      lastWatchedPosition?: number
-    }
-  ) {
-    try {
-      if (!studentId || !lessonId) return;
-      const refId = `${studentId}_${lessonId}`;
-      
-      await setDoc(doc(db, 'videoAnalytics', refId), {
-        studentId,
-        courseId,
-        lessonId,
-        timestamp: serverTimestamp(),
-        completionStatus: action === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS',
-        ...stats
-      }, { merge: true });
-
-      // Only timeline significant events
-      if (action === 'STARTED' || action === 'COMPLETED') {
-        await this.logTimelineEvent({
-          studentId,
-          type: action === 'STARTED' ? 'VIDEO_STARTED' : 'VIDEO_COMPLETED',
-          details: `${action === 'STARTED' ? 'Started' : 'Completed'} watching a video.`,
-          metadata: { lessonId, courseId }
-        });
-      }
-
-      // Update student activity
-      await setDoc(doc(db, 'studentAnalytics', studentId), {
-        lastActivity: serverTimestamp()
-      }, { merge: true });
-
-    } catch (e) {
-      console.error("Video telemetry error:", e);
-    }
-  },
-
-  /**
-   * Course & Lesson Activity
-   */
-  async logCourseAction(studentId: string, courseId: string, action: 'COURSE_OPENED' | 'LESSON_OPENED' | 'LESSON_COMPLETED', itemName: string, lessonId?: string) {
+  async logCourseAction(studentId: string, courseId: string, action: 'COURSE_OPENED' | 'LESSON_OPENED' | 'LESSON_COMPLETED', itemName: string) {
     try {
       if (!studentId) return;
-
-      if (action === 'LESSON_OPENED' && lessonId) {
-        // Track in learning sessions if we have an active one? 
-        // We'll just update last activity
-        await setDoc(doc(db, 'studentAnalytics', studentId), {
-          lastActivity: serverTimestamp()
-        }, { merge: true });
-      }
 
       if (action === 'LESSON_COMPLETED') {
         await setDoc(doc(db, 'studentAnalytics', studentId), {
@@ -235,8 +189,7 @@ export const Telemetry = {
       await this.logTimelineEvent({
         studentId,
         type: action as TimelineEventType,
-        details: `${action.replace('_', ' ')}: ${itemName}`,
-        metadata: { courseId, lessonId }
+        description: `${action.replace('_', ' ')}: ${itemName}`
       });
 
     } catch (e) {
@@ -245,7 +198,7 @@ export const Telemetry = {
   },
 
   /**
-   * 6. TEST INTEGRITY MONITORING
+   * PHASE 4: TEST INTEGRITY MONITORING
    */
   async logTestViolation(studentId: string, testId: string, violationType: string) {
     try {
@@ -268,7 +221,7 @@ export const Telemetry = {
   },
 
   /**
-   * 10. MISSED TEST & ASSIGNMENT ANALYTICS
+   * TEST & ASSIGNMENT TIMELINE WRAPPERS
    */
   async logMissedTest(studentId: string, testId: string, courseId: string, dueDate: Date) {
     try {
@@ -285,19 +238,11 @@ export const Telemetry = {
     }
   },
 
-  async logAssignmentAction(studentId: string, courseId: string, assignmentId: string, action: 'ASSIGNMENT_OPENED' | 'ASSIGNMENT_SUBMIT', assignmentTitle: string) {
+  async logAssignmentAction(studentId: string, courseId: string, assignmentId: string, action: 'ASSIGNMENT_SUBMITTED', assignmentTitle: string) {
     try {
       if (!studentId) return;
 
-      if (action === 'ASSIGNMENT_SUBMIT') {
-        await setDoc(doc(db, 'assignmentTracking', `${studentId}_${assignmentId}`), {
-          studentId,
-          courseId,
-          assignmentId,
-          submissionDate: serverTimestamp(),
-          status: 'submitted'
-        }, { merge: true });
-
+      if (action === 'ASSIGNMENT_SUBMITTED') {
         await setDoc(doc(db, 'studentAnalytics', studentId), {
           totalAssignmentsSubmitted: increment(1)
         }, { merge: true });
@@ -306,8 +251,7 @@ export const Telemetry = {
       await this.logTimelineEvent({
         studentId,
         type: action as TimelineEventType,
-        details: `${action.replace('_', ' ')}: ${assignmentTitle}`,
-        metadata: { courseId, assignmentId }
+        description: `${action.replace('_', ' ')}: ${assignmentTitle}`
       });
 
     } catch (e) {
