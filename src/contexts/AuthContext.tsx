@@ -13,7 +13,9 @@ export interface AppUser {
   name: string | null;
   role: UserRole;
   status?: string;
-  // Other fields can be added here
+  currentStreak?: number;
+  lastLoginDate?: string;
+  focusPoints?: number;
 }
 
 interface AuthContextType {

@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Course } from '@/types';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -165,11 +166,11 @@ export default function StudentCoursesPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2].map(i => (
-              <Card key={i} className="animate-pulse">
-                <div className="h-40 bg-slate-200"></div>
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="h-40 w-full rounded-none" />
                 <CardContent className="p-6 space-y-4">
-                  <div className="h-6 bg-slate-200 rounded w-2/3"></div>
-                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="h-4 w-1/2" />
                 </CardContent>
               </Card>
             ))}
