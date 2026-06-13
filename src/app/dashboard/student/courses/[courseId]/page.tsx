@@ -53,7 +53,6 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
         if (courseDoc.exists()) {
           const cData = courseDoc.data();
           setCourse({ courseId: courseDoc.id, ...cData } as Course);
-          Telemetry.logCourseAction(appUser.uid, courseId, 'COURSE_OPENED', cData.title);
         }
 
         // 3. Fetch Advanced Media

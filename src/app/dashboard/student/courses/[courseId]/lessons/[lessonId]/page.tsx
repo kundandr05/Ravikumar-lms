@@ -49,9 +49,6 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         if (lessonDoc.exists()) {
           const lData = { lessonId: lessonDoc.id, ...lessonDoc.data() } as Lesson;
           setLesson(lData);
-          Telemetry.logCourseAction(appUser.uid, courseId, 'LESSON_OPENED', lData.title);
-          const sId = await Telemetry.startLearningSession(appUser.uid, courseId, lessonId);
-          if (sId) setLearningSessionId(sId);
         }
 
         const lessonsQuery = query(collection(db, 'lessons'), where('courseId', '==', courseId), orderBy('order', 'asc'));
@@ -81,15 +78,6 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     fetchLessonData();
   }, [courseId, lessonId, appUser]);
 
-  useEffect(() => {
-    // End session when unmounting or leaving page
-    return () => {
-      if (appUser?.uid && learningSessionId) {
-        Telemetry.endLearningSession(appUser.uid, learningSessionId);
-      }
-    };
-  }, [appUser, learningSessionId]);
-
   const handleMarkComplete = async () => {
     if (!appUser?.uid) return;
     setMarking(true);
@@ -103,7 +91,6 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         completedAt: serverTimestamp()
       });
       setIsCompleted(true);
-      Telemetry.logCourseAction(appUser.uid, courseId, 'LESSON_COMPLETED', lesson?.title || '');
     } catch (error) {
       console.error("Error marking complete:", error);
       alert("Failed to mark as complete");
