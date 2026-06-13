@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { format } from 'date-fns';
-import { AlertTriangle, Clock, PlayCircle, FileText, CheckCircle, XCircle, Download, Monitor, Activity, Flame } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { AlertTriangle, Clock, PlayCircle, FileText, CheckCircle, XCircle, Download, Monitor, Activity, Flame, Target } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -19,19 +19,22 @@ interface StudentInfo {
   phone?: string;
   status?: string;
   createdAt?: any;
-  currentStreak?: number;
-  focusPoints?: number;
 }
 
 export default function StudentIntelligenceDashboard({ params }: { params: Promise<{ studentId: string }> }) {
   const { studentId } = use(params);
   const [student, setStudent] = useState<StudentInfo | null>(null);
+  const [analytics, setAnalytics] = useState<any>({});
   const [timeline, setTimeline] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [videoStats, setVideoStats] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // Derived metrics
+  const [streak, setStreak] = useState(0);
+  const [focusScore, setFocusScore] = useState(0);
 
   useEffect(() => {
     async function fetchIntelligence() {
@@ -53,7 +56,8 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
         // 3. Fetch Video Analytics
         const videoQ = query(collection(db, 'videoAnalytics'), where('studentId', '==', studentId));
         const videoSnap = await getDocs(videoQ);
-        setVideoStats(videoSnap.docs.map(d => d.data()));
+        const vData = videoSnap.docs.map(d => d.data());
+        setVideoStats(vData);
 
         // 4. Fetch Timeline
         const timelineQ = query(collection(db, 'studentTimeline'), where('studentId', '==', studentId), orderBy('timestamp', 'desc'), limit(50));
@@ -64,6 +68,74 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
         const enrollQ = query(collection(db, 'enrollments'), where('studentId', '==', studentId));
         const enrollSnap = await getDocs(enrollQ);
         setEnrollments(enrollSnap.docs.map(d => d.data()));
+
+        // 6. Fetch Student Analytics
+        const analyticsDoc = await getDoc(doc(db, 'studentAnalytics', studentId));
+        if (analyticsDoc.exists()) {
+          setAnalytics(analyticsDoc.data());
+        } else {
+          setAnalytics({ totalLearningTimeSeconds: 0, totalLogins: 0 });
+        }
+
+        // 7. Calculate Streak from loginHistory
+        const loginQ = query(collection(db, 'loginHistory'), where('studentId', '==', studentId), orderBy('loginTime', 'desc'), limit(30));
+        const loginSnap = await getDocs(loginQ);
+        
+        let currentStreak = 0;
+        let lastDate: Date | null = null;
+        
+        // Simple streak logic: check consecutive days backward from today/yesterday
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        for (const doc of loginSnap.docs) {
+          const lData = doc.data();
+          if (lData.loginTime) {
+            const loginDate = lData.loginTime.toDate();
+            loginDate.setHours(0,0,0,0);
+            
+            if (!lastDate) {
+              const diff = differenceInDays(today, loginDate);
+              if (diff === 0 || diff === 1) {
+                currentStreak = 1;
+                lastDate = loginDate;
+              } else {
+                break; // No streak
+              }
+            } else {
+              const diff = differenceInDays(lastDate, loginDate);
+              if (diff === 1) {
+                currentStreak++;
+                lastDate = loginDate;
+              } else if (diff > 1) {
+                break;
+              }
+            }
+          }
+        }
+        setStreak(currentStreak);
+
+        // Calculate Focus Score
+        // Baseline 100. Deduct points for skips.
+        let fScore = 100;
+        let totalSkips = 0;
+        vData.forEach(v => {
+          totalSkips += (v.skipEvents?.length || 0);
+          if (v.skippedDurationSeconds && v.skippedDurationSeconds > 30) totalSkips += 1;
+        });
+        fScore -= (totalSkips * 5);
+        
+        // Check test violations
+        const testAttemptsQ = query(collection(db, 'testAttempts'), where('studentId', '==', studentId));
+        const testAttemptsSnap = await getDocs(testAttemptsQ);
+        testAttemptsSnap.docs.forEach(doc => {
+          const d = doc.data();
+          if (d.violationCount > 0) fScore -= (d.violationCount * 10);
+        });
+
+        if (fScore < 0) fScore = 0;
+        if (vData.length === 0 && testAttemptsSnap.empty) fScore = 0; // No data = 0 focus
+        setFocusScore(fScore);
 
       } catch (e) {
         console.error("Failed to load intelligence:", e);
@@ -90,9 +162,14 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
   if (!student) return <div className="p-8 text-center text-red-500">Student not found</div>;
 
   // Calculate Insights
-  const totalWatchTime = videoStats.reduce((acc, curr) => acc + (curr.totalWatchTimeSeconds || 0), 0);
-  const totalWatchMinutes = Math.round(totalWatchTime / 60);
+  let totalSessionSeconds = 0;
+  sessions.forEach(s => totalSessionSeconds += (s.durationSeconds || 0));
+  const totalLearningMinutes = Math.round((analytics.totalLearningTimeSeconds || totalSessionSeconds) / 60);
   
+  let totalWatchPercentage = 0;
+  videoStats.forEach(v => totalWatchPercentage += (v.watchPercentage || 0));
+  const avgWatchPercentage = videoStats.length > 0 ? Math.round(totalWatchPercentage / videoStats.length) : 0;
+
   const riskLevel = enrollments.length === 0 ? 'HIGH RISK' : (sessions.length < 5 ? 'MEDIUM RISK' : 'LOW RISK');
   const riskColor = riskLevel === 'HIGH RISK' ? 'text-red-600 bg-red-100' : riskLevel === 'MEDIUM RISK' ? 'text-amber-600 bg-amber-100' : 'text-green-600 bg-green-100';
 
@@ -130,7 +207,7 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
               <div className="text-sm font-medium opacity-80 uppercase tracking-wider mb-2">Total Learning Time</div>
               <div className="text-4xl font-black flex items-center gap-2">
                 <Clock className="w-8 h-8 opacity-50" />
-                {totalWatchMinutes} <span className="text-xl font-medium opacity-80">mins</span>
+                {totalLearningMinutes} <span className="text-xl font-medium opacity-80">mins</span>
               </div>
             </CardContent>
           </Card>
@@ -140,22 +217,25 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
               <div className="text-sm font-medium opacity-80 uppercase tracking-wider mb-2">Daily Streak</div>
               <div className="text-4xl font-black flex items-center gap-2">
                 <Flame className="w-8 h-8 opacity-50" />
-                {student.currentStreak || 0} <span className="text-xl font-medium opacity-80">days</span>
+                {streak} <span className="text-xl font-medium opacity-80">days</span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700">
             <CardContent className="p-6">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Focus Points</div>
-              <div className="text-4xl font-black text-slate-800 dark:text-slate-100">{student.focusPoints || 0}</div>
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Focus Score</div>
+              <div className="text-4xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Target className="w-8 h-8 text-green-500 opacity-50" />
+                {focusScore} <span className="text-xl font-medium opacity-80 text-muted-foreground">/100</span>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700">
             <CardContent className="p-6">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Enrolled Courses</div>
-              <div className="text-4xl font-black text-slate-800 dark:text-slate-100">{enrollments.length}</div>
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Avg Watch Time</div>
+              <div className="text-4xl font-black text-slate-800 dark:text-slate-100">{avgWatchPercentage}%</div>
             </CardContent>
           </Card>
         </div>
@@ -193,16 +273,16 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                       </div>
                     </div>
                   ) : null}
-                  {student.currentStreak && student.currentStreak >= 3 ? (
+                  {streak >= 3 ? (
                     <div className="flex items-start gap-3 p-3 bg-green-50 text-green-700 rounded-lg">
                       <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold">Highly Engaged Learner</p>
-                        <p className="text-sm opacity-80">Student is on a {student.currentStreak} day learning streak!</p>
+                        <p className="text-sm opacity-80">Student is on a {streak} day learning streak!</p>
                       </div>
                     </div>
                   ) : null}
-                  {videoStats.some(v => v.skipEvents && v.skipEvents.length > 3) ? (
+                  {videoStats.some(v => v.skipEvents?.length > 3 || v.skippedDurationSeconds > 60) ? (
                     <div className="flex items-start gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg">
                       <Activity className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>
@@ -244,7 +324,7 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                 ) : (
                   <div className="space-y-4">
                     {videoStats.map((stat, i) => (
-                      <div key={i} className="flex justify-between items-center p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                      <div key={i} className="flex flex-col md:flex-row justify-between md:items-center p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50 gap-4">
                         <div className="flex items-center gap-3">
                           <PlayCircle className="w-8 h-8 text-indigo-500" />
                           <div>
@@ -252,13 +332,18 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                             <p className="text-sm text-muted-foreground">Course ID: {stat.courseId}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg">{Math.round(stat.totalWatchTimeSeconds / 60)} mins watched</p>
-                          {stat.skipEvents && stat.skipEvents.length > 0 ? (
-                            <p className="text-sm text-red-500 font-medium">⚠️ {stat.skipEvents.length} skips detected</p>
-                          ) : (
-                            <p className="text-sm text-green-500 font-medium">✓ No skipping</p>
-                          )}
+                        <div className="text-left md:text-right flex flex-col md:items-end">
+                          <p className="font-bold text-lg">{Math.round((stat.watchDurationSeconds || 0) / 60)} mins watched</p>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm font-medium text-slate-600 bg-slate-200 px-2 py-0.5 rounded">
+                              Watched: {Math.round(stat.watchPercentage || 0)}%
+                            </span>
+                            {stat.skippedDurationSeconds > 0 ? (
+                              <span className="text-sm text-red-500 font-medium">⚠️ {Math.round(stat.skippedDurationSeconds)}s skipped</span>
+                            ) : (
+                              <span className="text-sm text-green-500 font-medium">✓ No skipping</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -278,7 +363,7 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                   {timeline.map((event, idx) => (
                     <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                       <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-200 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                        {event.type === 'LOGIN' ? <Monitor className="w-4 h-4" /> : event.type === 'VIDEO_WATCH' || event.type === 'VIDEO_SKIP' ? <PlayCircle className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+                        {event.type === 'LOGIN' ? <Monitor className="w-4 h-4" /> : event.type.includes('VIDEO') ? <PlayCircle className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
                       </div>
                       <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 shadow-sm bg-white dark:bg-slate-800">
                         <div className="flex items-center justify-between space-x-2 mb-1">
@@ -306,6 +391,7 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                     <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
                       <tr>
                         <th className="px-6 py-3">Date & Time</th>
+                        <th className="px-6 py-3">Duration</th>
                         <th className="px-6 py-3">Device</th>
                         <th className="px-6 py-3">OS</th>
                         <th className="px-6 py-3">Browser</th>
@@ -315,6 +401,7 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                       {sessions.map((s, i) => (
                         <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
                           <td className="px-6 py-4 font-medium">{s.startTime?.toDate() ? format(s.startTime.toDate(), 'PP p') : 'N/A'}</td>
+                          <td className="px-6 py-4">{s.durationSeconds ? `${Math.round(s.durationSeconds / 60)} mins` : (s.isActive ? 'Active' : 'N/A')}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2 py-1 rounded text-xs font-bold ${s.device === 'Desktop' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                               {s.device || 'Unknown'}

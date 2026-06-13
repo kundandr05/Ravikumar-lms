@@ -30,7 +30,23 @@ export interface Test {
   title: string;
   description: string;
   durationMinutes: number;
+  availableFrom?: any; // Firestore Timestamp
+  availableUntil?: any; // Firestore Timestamp
+  passingMarks?: number;
   createdAt: any;
+}
+
+export interface TestAttempt {
+  attemptId?: string;
+  testId: string;
+  studentId: string;
+  courseId: string;
+  score: number;
+  totalQuestions: number;
+  passed: boolean;
+  status: 'COMPLETED' | 'LOCKED_FOR_REVIEW';
+  violationCount: number;
+  submittedAt: any; // Firestore Timestamp
 }
 
 export interface Question {

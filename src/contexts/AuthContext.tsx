@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -52,9 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Log session if not already logged in this tab session
             if (typeof window !== 'undefined' && !sessionStorage.getItem('session_logged_' + firebaseUser.uid)) {
               if (userData.role === 'student') {
-                Telemetry.logSessionStart(firebaseUser.uid);
+                const sId = await Telemetry.logSessionStart(firebaseUser.uid);
+                if (sId) {
+                  setSessionId(sId);
+                  sessionStorage.setItem('current_session_id', sId);
+                }
               }
               sessionStorage.setItem('session_logged_' + firebaseUser.uid, 'true');
+            } else if (typeof window !== 'undefined') {
+              const existingSId = sessionStorage.getItem('current_session_id');
+              if (existingSId) setSessionId(existingSId);
             }
           } else {
             setAppUser(null);
@@ -65,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setAppUser(null);
+        setSessionId(null);
       }
       
       setLoading(false);
@@ -73,7 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Handle tab closing
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (appUser?.uid && sessionId) {
+        Telemetry.logSessionEnd(appUser.uid, sessionId);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [appUser, sessionId]);
+
   const logout = async () => {
+    if (appUser?.uid && sessionId) {
+      await Telemetry.logSessionEnd(appUser.uid, sessionId);
+      sessionStorage.removeItem('current_session_id');
+      sessionStorage.removeItem('session_logged_' + appUser.uid);
+    }
     await auth.signOut();
     window.location.href = '/';
   };

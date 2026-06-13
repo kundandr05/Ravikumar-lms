@@ -9,6 +9,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Course, Test, MediaContent, MediaProgress, Lesson } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Telemetry } from '@/lib/telemetry';
 
 export default function StudentCourseViewPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = use(params);
@@ -50,7 +51,9 @@ export default function StudentCourseViewPage({ params }: { params: Promise<{ co
         // 2. Fetch Course
         const courseDoc = await getDoc(doc(db, 'courses', courseId));
         if (courseDoc.exists()) {
-          setCourse({ courseId: courseDoc.id, ...courseDoc.data() } as Course);
+          const cData = courseDoc.data();
+          setCourse({ courseId: courseDoc.id, ...cData } as Course);
+          Telemetry.logCourseAction(appUser.uid, courseId, 'COURSE_OPENED', cData.title);
         }
 
         // 3. Fetch Advanced Media

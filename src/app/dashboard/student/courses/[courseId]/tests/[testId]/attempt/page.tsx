@@ -3,11 +3,13 @@
 import { useEffect, useState, useRef, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Test, Question } from '@/types';
 import { useRouter } from 'next/navigation';
+import { Telemetry } from '@/lib/telemetry';
+import { AlertTriangle, Lock } from 'lucide-react';
 
 export default function StudentTestAttemptPage({ params }: { params: Promise<{ courseId: string, testId: string }> }) {
   const { courseId, testId } = use(params);
@@ -20,9 +22,27 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [locked, setLocked] = useState(false);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Integrity variables
+  const [violationCount, setViolationCount] = useState(0);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+  // Use refs for listener callbacks to always have latest state without remounting listeners
+  const violationCountRef = useRef(0);
+  const testIdRef = useRef(testId);
+  const appUserRef = useRef(appUser);
+  const isSubmittingRef = useRef(submitting);
+  const isLockedRef = useRef(locked);
+
+  useEffect(() => {
+    violationCountRef.current = violationCount;
+    isSubmittingRef.current = submitting;
+    isLockedRef.current = locked;
+  }, [violationCount, submitting, locked]);
 
   useEffect(() => {
     async function fetchTestAndQuestions() {
@@ -35,6 +55,38 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
           return;
         }
         const tData = { testId: testDoc.id, ...testDoc.data() } as Test;
+        
+        // Time validation
+        const now = new Date();
+        const from = tData.availableFrom?.toDate ? tData.availableFrom.toDate() : (tData.availableFrom ? new Date(tData.availableFrom) : null);
+        const until = tData.availableUntil?.toDate ? tData.availableUntil.toDate() : (tData.availableUntil ? new Date(tData.availableUntil) : null);
+
+        if (from && now < from) {
+          alert("Test is not yet available.");
+          router.replace('/dashboard/student/tests');
+          return;
+        }
+        if (until && now > until) {
+          alert("Test deadline has passed.");
+          router.replace('/dashboard/student/tests');
+          return;
+        }
+
+        // Check if already attempted
+        const attemptQ = query(collection(db, 'testAttempts'), where('studentId', '==', appUser.uid), where('testId', '==', testId));
+        const attemptSnap = await getDocs(attemptQ);
+        if (!attemptSnap.empty) {
+          const attempt = attemptSnap.docs[0].data();
+          if (attempt.status === 'LOCKED_FOR_REVIEW') {
+            setLocked(true);
+            setLoading(false);
+            return;
+          }
+          alert("You have already completed this test.");
+          router.replace('/dashboard/student/tests');
+          return;
+        }
+
         setTestData(tData);
 
         const questionsQuery = query(
@@ -51,6 +103,14 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         setQuestions(fetchedQuestions);
         setTimeLeft(tData.durationMinutes * 60);
 
+        // Telemetry
+        Telemetry.logTimelineEvent({
+          studentId: appUser.uid,
+          type: 'TEST_STARTED',
+          details: `Started test: ${tData.title}`,
+          metadata: { testId }
+        });
+
       } catch (error) {
         console.error("Error fetching test data:", error);
       } finally {
@@ -59,15 +119,67 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     }
 
     fetchTestAndQuestions();
-  }, [testId, appUser]);
+  }, [testId, appUser, router]);
+
+  // INTEGRITY MONITORING
+  useEffect(() => {
+    if (loading || locked || submitting) return;
+
+    const handleViolation = async (reason: string) => {
+      if (isSubmittingRef.current || isLockedRef.current) return;
+      
+      const newCount = violationCountRef.current + 1;
+      setViolationCount(newCount);
+      
+      // Log to Firebase
+      if (appUserRef.current?.uid) {
+        await addDoc(collection(db, 'integrityLogs'), {
+          studentId: appUserRef.current.uid,
+          testId: testIdRef.current,
+          timestamp: serverTimestamp(),
+          reason,
+          violationNumber: newCount
+        });
+      }
+
+      if (newCount === 1) {
+        setWarningMessage("Warning 1: You have left the test window. One more violation will lock your test.");
+      } else if (newCount === 2) {
+        setWarningMessage("Warning 2: FINAL WARNING. If you leave the test window again, your test will be locked and automatically submitted.");
+      } else if (newCount >= 3) {
+        setWarningMessage(null);
+        setLocked(true);
+        // Auto submit as Locked
+        handleForceLockSubmit();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation("Tab switched or browser minimized (visibilitychange)");
+      }
+    };
+
+    const handleBlur = () => {
+      handleViolation("Window focus lost (blur)");
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [loading, locked, submitting]);
 
   // Timer logic
   useEffect(() => {
-    if (timeLeft !== null && timeLeft > 0 && !submitting) {
+    if (timeLeft !== null && timeLeft > 0 && !submitting && !locked) {
       timerRef.current = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
-    } else if (timeLeft === 0 && !submitting) {
+    } else if (timeLeft === 0 && !submitting && !locked) {
       // Auto submit when time runs out
       handleSubmit();
     }
@@ -75,7 +187,7 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [timeLeft, submitting]);
+  }, [timeLeft, submitting, locked]);
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     setAnswers(prev => ({
@@ -84,23 +196,56 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     }));
   };
 
+  const handleForceLockSubmit = async () => {
+    if (isSubmittingRef.current || !testData || !appUserRef.current) return;
+    setSubmitting(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    let score = 0;
+    questions.forEach(q => {
+      if (q.questionId && answers[q.questionId] === q.correctOptionIndex) score += 1;
+    });
+
+    const totalScore = questions.length;
+    try {
+      await addDoc(collection(db, 'testAttempts'), {
+        testId,
+        testTitle: testData.title,
+        studentId: appUserRef.current.uid,
+        courseId,
+        score,
+        totalScore,
+        passed: score >= (testData.passingMarks || 0),
+        status: 'LOCKED_FOR_REVIEW',
+        violationCount: 3,
+        submittedAt: serverTimestamp(),
+        answers
+      });
+      
+      Telemetry.logTimelineEvent({
+        studentId: appUserRef.current.uid,
+        type: 'TEST_LOCKED',
+        details: `Test Locked: ${testData.title} (Integrity Violation)`,
+        metadata: { testId }
+      });
+
+    } catch (error) {
+      console.error("Error submitting locked test", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (submitting || !testData || !appUser) return;
     setSubmitting(true);
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    // Calculate score
     let score = 0;
     questions.forEach(q => {
-      if (q.questionId && answers[q.questionId] === q.correctOptionIndex) {
-        score += 1;
-      }
+      if (q.questionId && answers[q.questionId] === q.correctOptionIndex) score += 1;
     });
 
     const totalScore = questions.length;
-    const scorePercentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
-
     try {
       await addDoc(collection(db, 'testAttempts'), {
         testId,
@@ -109,29 +254,53 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         courseId,
         score,
         totalScore,
-        scorePercentage,
+        passed: score >= (testData.passingMarks || 0),
+        status: 'COMPLETED',
+        violationCount,
         submittedAt: serverTimestamp(),
-        answers // store the chosen answers for future review
+        answers
       });
       
+      Telemetry.logTimelineEvent({
+        studentId: appUser.uid,
+        type: 'TEST_SUBMIT',
+        details: `Submitted test: ${testData.title} (${score}/${totalScore})`,
+        metadata: { testId }
+      });
+
       alert(`Test Submitted! You scored ${score}/${totalScore}`);
-      router.replace('/dashboard/student/results');
+      router.replace('/dashboard/student/tests');
     } catch (error) {
       console.error("Error submitting test", error);
       alert("Failed to submit test. Please contact support.");
-      setSubmitting(false); // allow retry if network failed
+      setSubmitting(false); 
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Preparing your test environment...</div>;
+    return <div className="p-8 text-center text-muted-foreground animate-pulse">Preparing secure test environment...</div>;
+  }
+
+  if (locked) {
+    return (
+      <div className="max-w-2xl mx-auto mt-20 text-center space-y-6">
+        <div className="flex justify-center"><Lock className="w-20 h-20 text-red-500" /></div>
+        <h1 className="text-4xl font-black text-foreground">TEST LOCKED</h1>
+        <p className="text-lg text-muted-foreground">
+          This test has been locked due to repeated integrity violations (navigating away from the test window).
+        </p>
+        <p className="text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">
+          Status: <strong>LOCKED_FOR_REVIEW</strong>. Please contact your administrator.
+        </p>
+        <Button onClick={() => router.replace('/dashboard/student/tests')}>Return to Dashboard</Button>
+      </div>
+    );
   }
 
   if (!testData || questions.length === 0) {
     return <div className="p-8 text-center text-red-500">Invalid test configuration.</div>;
   }
 
-  // Format time left
   const formatTime = (seconds: number | null) => {
     if (seconds === null) return "--:--";
     const m = Math.floor(seconds / 60);
@@ -139,10 +308,23 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const isLowTime = timeLeft !== null && timeLeft <= 60; // Less than 1 min
+  const isLowTime = timeLeft !== null && timeLeft <= 60; 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24">
+      {warningMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl scale-in-center">
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
+            <h3 className="text-2xl font-bold text-slate-900">Integrity Warning</h3>
+            <p className="text-slate-600 font-medium">{warningMessage}</p>
+            <Button size="lg" className="w-full bg-red-600 hover:bg-red-700" onClick={() => setWarningMessage(null)}>
+              I Understand. Return to Test.
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Sticky Header with Timer */}
       <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-primary-foreground p-4 flex justify-between items-center px-6">
         <div>
