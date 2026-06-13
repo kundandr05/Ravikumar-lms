@@ -9,6 +9,9 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Course, Lesson } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube';
+import { useRef } from 'react';
+import { Telemetry } from '@/lib/telemetry';
 
 // Helper to extract YouTube Video ID and format embed URL
 function getYouTubeEmbedUrl(url: string) {
@@ -42,6 +45,54 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   const [isCompleted, setIsCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
   const [endingCourse, setEndingCourse] = useState(false);
+  const playerRef = useRef<YouTubePlayer | null>(null);
+  const skipEventsRef = useRef<{from: number, to: number}[]>([]);
+  const lastTimeRef = useRef<number>(0);
+  const watchTimeRef = useRef<number>(0);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startTelemetryPolling = () => {
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    pollingIntervalRef.current = setInterval(async () => {
+      if (!playerRef.current) return;
+      const currentTime = await playerRef.current.getCurrentTime();
+      if (currentTime !== undefined) {
+        // Calculate diff
+        const diff = currentTime - lastTimeRef.current;
+        if (diff > 2 || diff < -2) {
+          // It's a skip or rewind
+          skipEventsRef.current.push({ from: lastTimeRef.current, to: currentTime });
+        } else if (diff > 0 && diff <= 2) {
+          // Normal playback time
+          watchTimeRef.current += diff;
+        }
+        lastTimeRef.current = currentTime;
+      }
+    }, 1000);
+  };
+
+  const stopTelemetryPolling = () => {
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+  };
+
+  const videoId = lesson?.videoUrl ? (() => {
+    let id = '';
+    const url = lesson.videoUrl;
+    if (url.includes('youtu.be/')) id = url.split('youtu.be/')[1].split('?')[0];
+    else if (url.includes('youtube.com/watch')) id = new URLSearchParams(url.split('?')[1]).get('v') || '';
+    else if (url.includes('youtube.com/embed/')) id = url.split('youtube.com/embed/')[1].split('?')[0];
+    return id;
+  })() : '';
+
+  // Log final metrics on unmount
+  useEffect(() => {
+    return () => {
+      stopTelemetryPolling();
+      if (appUser && videoId && watchTimeRef.current > 0) {
+        Telemetry.logVideoMetrics(appUser.uid, courseId, videoId, watchTimeRef.current, skipEventsRef.current);
+      }
+    };
+  }, [appUser, courseId, videoId]);
 
   const handleEndCourse = async () => {
     if (!appUser?.uid) return;
@@ -184,13 +235,15 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         <div className="flex-1 space-y-6">
           <div className="bg-foreground aspect-video rounded-xl overflow-hidden shadow-lg border border-slate-800">
             {embedUrl ? (
-              <iframe
-                src={`${embedUrl}?rel=0&modestbranding=1`}
-                title={lesson.title}
+              <YouTube 
+                videoId={videoId} 
                 className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+                opts={{ width: '100%', height: '100%', playerVars: { rel: 0, modestbranding: 1 } }}
+                onReady={(e) => { playerRef.current = e.target; }}
+                onPlay={() => { startTelemetryPolling(); }}
+                onPause={() => { stopTelemetryPolling(); }}
+                onEnd={() => { stopTelemetryPolling(); handleMarkAsComplete(); }}
+              />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-slate-900">
                 <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>

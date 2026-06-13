@@ -1,209 +1,337 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { use, useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { format } from 'date-fns';
+import { AlertTriangle, Clock, PlayCircle, FileText, CheckCircle, XCircle, Download, Monitor, Activity, Flame } from 'lucide-react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 interface StudentInfo {
   uid: string;
   name: string;
   email: string;
   phone?: string;
+  status?: string;
   createdAt?: any;
+  currentStreak?: number;
+  focusPoints?: number;
 }
 
-interface EnrolledCourseInfo {
-  enrollmentId: string;
-  courseId: string;
-  courseTitle: string;
-  enrolledAt: any;
-  status: string;
-  progressPercentage: number;
-}
-
-export default function StudentDetailsPage({ params }: { params: Promise<{ studentId: string }> }) {
+export default function StudentIntelligenceDashboard({ params }: { params: Promise<{ studentId: string }> }) {
   const { studentId } = use(params);
-  
   const [student, setStudent] = useState<StudentInfo | null>(null);
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourseInfo[]>([]);
+  const [timeline, setTimeline] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [videoStats, setVideoStats] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function fetchStudentData() {
+    async function fetchIntelligence() {
       try {
         setLoading(true);
 
-        // 1. Fetch Student User Details
+        // 1. Fetch Basic Info
         const userDoc = await getDoc(doc(db, 'users', studentId));
-        if (!userDoc.exists()) {
-          setError('Student not found');
-          setLoading(false);
-          return;
-        }
-        setStudent({ uid: userDoc.id, ...userDoc.data() } as StudentInfo);
-
-        // 2. Fetch Enrollments for this student
-        const enrollQuery = query(collection(db, 'enrollments'), where('studentId', '==', studentId));
-        const enrollSnap = await getDocs(enrollQuery);
-        
-        if (enrollSnap.empty) {
-          setEnrolledCourses([]);
-          setLoading(false);
-          return;
+        if (userDoc.exists()) {
+          setStudent({ uid: userDoc.id, ...userDoc.data() } as StudentInfo);
         }
 
-        const enrollments = enrollSnap.docs.map(d => ({ enrollmentId: d.id, ...d.data() }));
+        // 2. Fetch Sessions
+        const sessionQ = query(collection(db, 'learningSessions'), where('studentId', '==', studentId), orderBy('startTime', 'desc'), limit(30));
+        const sessionSnap = await getDocs(sessionQ);
+        const sData = sessionSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setSessions(sData);
 
-        // 3. Fetch all courses to get titles
-        const coursesSnap = await getDocs(collection(db, 'courses'));
-        const coursesMap: Record<string, string> = {};
-        coursesSnap.forEach(d => {
-          coursesMap[d.id] = d.data().title;
-        });
+        // 3. Fetch Video Analytics
+        const videoQ = query(collection(db, 'videoAnalytics'), where('studentId', '==', studentId));
+        const videoSnap = await getDocs(videoQ);
+        setVideoStats(videoSnap.docs.map(d => d.data()));
 
-        // 4. Fetch Progress to calculate percentages
-        // Get all lessons to count totals per course
-        const allLessonsSnap = await getDocs(collection(db, 'lessons'));
-        const lessonCounts: Record<string, number> = {};
-        allLessonsSnap.forEach(d => {
-          const cId = d.data().courseId;
-          lessonCounts[cId] = (lessonCounts[cId] || 0) + 1;
-        });
+        // 4. Fetch Timeline
+        const timelineQ = query(collection(db, 'studentTimeline'), where('studentId', '==', studentId), orderBy('timestamp', 'desc'), limit(50));
+        const timelineSnap = await getDocs(timelineQ);
+        setTimeline(timelineSnap.docs.map(d => d.data()));
 
-        // Get student's completed lessons
-        const progSnap = await getDocs(
-          query(collection(db, 'lessonProgress'), where('studentId', '==', studentId), where('completed', '==', true))
-        );
-        const progCounts: Record<string, number> = {};
-        progSnap.forEach(d => {
-          const cId = d.data().courseId;
-          progCounts[cId] = (progCounts[cId] || 0) + 1;
-        });
+        // 5. Fetch Enrollments
+        const enrollQ = query(collection(db, 'enrollments'), where('studentId', '==', studentId));
+        const enrollSnap = await getDocs(enrollQ);
+        setEnrollments(enrollSnap.docs.map(d => d.data()));
 
-        // 5. Combine data
-        const combinedData: EnrolledCourseInfo[] = enrollments.map((en: any) => {
-          const total = lessonCounts[en.courseId] || 0;
-          const completed = progCounts[en.courseId] || 0;
-          const progressPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-          return {
-            enrollmentId: en.enrollmentId,
-            courseId: en.courseId,
-            courseTitle: coursesMap[en.courseId] || 'Unknown Course',
-            enrolledAt: en.enrolledAt,
-            status: en.status || 'active',
-            progressPercentage
-          };
-        });
-
-        setEnrolledCourses(combinedData);
-
-      } catch (err) {
-        console.error("Error fetching student details:", err);
-        setError("Failed to load student details");
+      } catch (e) {
+        console.error("Failed to load intelligence:", e);
       } finally {
         setLoading(false);
       }
     }
-
-    fetchStudentData();
+    fetchIntelligence();
   }, [studentId]);
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading student details...</div>;
-  if (error || !student) return <div className="p-8 text-center text-red-500">{error}</div>;
+  const generatePDF = () => {
+    if (!reportRef.current) return;
+    const opt = {
+      margin: 10,
+      filename: `Report_${student?.name || 'Student'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+    html2pdf().set(opt).from(reportRef.current).save();
+  };
+
+  if (loading) return <div className="p-8 text-center animate-pulse">Loading Intelligence Engine...</div>;
+  if (!student) return <div className="p-8 text-center text-red-500">Student not found</div>;
+
+  // Calculate Insights
+  const totalWatchTime = videoStats.reduce((acc, curr) => acc + (curr.totalWatchTimeSeconds || 0), 0);
+  const totalWatchMinutes = Math.round(totalWatchTime / 60);
+  
+  const riskLevel = enrollments.length === 0 ? 'HIGH RISK' : (sessions.length < 5 ? 'MEDIUM RISK' : 'LOW RISK');
+  const riskColor = riskLevel === 'HIGH RISK' ? 'text-red-600 bg-red-100' : riskLevel === 'MEDIUM RISK' ? 'text-amber-600 bg-amber-100' : 'text-green-600 bg-green-100';
+
+  // Prepare chart data
+  const sessionChartData = [...sessions].reverse().map(s => {
+    const d = s.startTime?.toDate();
+    return {
+      date: d ? format(d, 'MMM dd') : 'N/A',
+      active: 1
+    };
+  });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto space-y-6 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <Link href="/dashboard/admin/enrollments" className="text-primary hover:underline text-sm font-medium mb-2 inline-block">&larr; Back to Enrollments</Link>
-          <h1 className="text-3xl font-bold text-foreground">Student Profile</h1>
+          <h1 className="text-3xl font-black text-foreground">{student.name}</h1>
+          <p className="text-muted-foreground flex items-center gap-2">
+            {student.email} • {student.phone || 'No phone'}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${riskColor}`}>{riskLevel}</span>
+          </p>
         </div>
+        <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
+          <Download className="w-4 h-4 mr-2" /> Generate Parent Report
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Personal Details Card */}
-        <Card className="md:col-span-1 shadow-sm">
-          <CardHeader className="bg-muted/50 border-b">
-            <CardTitle className="text-lg">Personal Details</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-4 border-b pb-4">
-              <div className="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-2xl font-bold uppercase">
-                {student.name.substring(0, 2)}
+      {/* Report Container (for PDF generation) */}
+      <div ref={reportRef} className="space-y-6">
+        
+        {/* KPI Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="text-sm font-medium opacity-80 uppercase tracking-wider mb-2">Total Learning Time</div>
+              <div className="text-4xl font-black flex items-center gap-2">
+                <Clock className="w-8 h-8 opacity-50" />
+                {totalWatchMinutes} <span className="text-xl font-medium opacity-80">mins</span>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">{student.name}</h2>
-                <span className="inline-block px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full mt-1">Student</span>
-              </div>
-            </div>
-            
-            <div className="space-y-3 pt-2">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Email Address</p>
-                <p className="text-foreground">{student.email}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
-                <p className="text-foreground">{student.phone || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Registered On</p>
-                <p className="text-foreground">{student.createdAt?.toDate ? student.createdAt.toDate().toLocaleDateString() : 'N/A'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Enrollments & Progress */}
-        <Card className="md:col-span-2 shadow-sm">
-          <CardHeader className="bg-muted/50 border-b flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Enrolled Courses & Progress</CardTitle>
-            <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
-              {enrolledCourses.length} Courses
-            </span>
-          </CardHeader>
-          <CardContent className="p-0">
-            {enrolledCourses.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                This student is not enrolled in any courses yet.
+          <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="text-sm font-medium opacity-80 uppercase tracking-wider mb-2">Daily Streak</div>
+              <div className="text-4xl font-black flex items-center gap-2">
+                <Flame className="w-8 h-8 opacity-50" />
+                {student.currentStreak || 0} <span className="text-xl font-medium opacity-80">days</span>
               </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {enrolledCourses.map(course => (
-                  <div key={course.courseId} className="p-6 hover:bg-muted/50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700">
+            <CardContent className="p-6">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Focus Points</div>
+              <div className="text-4xl font-black text-slate-800 dark:text-slate-100">{student.focusPoints || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700">
+            <CardContent className="p-6">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Enrolled Courses</div>
+              <div className="text-4xl font-black text-slate-800 dark:text-slate-100">{enrollments.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+            <TabsTrigger value="overview" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">Overview & Risk</TabsTrigger>
+            <TabsTrigger value="video" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">Video Analytics</TabsTrigger>
+            <TabsTrigger value="timeline" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">Student Timeline</TabsTrigger>
+            <TabsTrigger value="sessions" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">Login Sessions</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">AI Risk Insights</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {enrollments.length === 0 ? (
+                    <div className="flex items-start gap-3 p-3 bg-red-50 text-red-700 rounded-lg">
+                      <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>
-                        <h3 className="font-bold text-lg text-foreground">{course.courseTitle}</h3>
-                        <p className="text-xs text-muted-foreground">Enrolled: {course.enrolledAt?.toDate ? course.enrolledAt.toDate().toLocaleDateString() : 'N/A'}</p>
-                      </div>
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${course.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                        {course.status}
-                      </span>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-foreground">Course Progress</span>
-                        <span className="text-sm font-bold text-emerald-600">{course.progressPercentage}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-emerald-500 h-full rounded-full transition-all" 
-                          style={{ width: `${course.progressPercentage}%` }} 
-                        />
+                        <p className="font-bold">Not enrolled in any courses</p>
+                        <p className="text-sm opacity-80">Student registered but has not started learning. Intervention recommended.</p>
                       </div>
                     </div>
+                  ) : null}
+                  {sessions.length < 5 && enrollments.length > 0 ? (
+                    <div className="flex items-start gap-3 p-3 bg-amber-50 text-amber-700 rounded-lg">
+                      <Clock className="w-5 h-5 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Low Platform Engagement</p>
+                        <p className="text-sm opacity-80">Student has logged in fewer than 5 times. Consistency is lacking.</p>
+                      </div>
+                    </div>
+                  ) : null}
+                  {student.currentStreak && student.currentStreak >= 3 ? (
+                    <div className="flex items-start gap-3 p-3 bg-green-50 text-green-700 rounded-lg">
+                      <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Highly Engaged Learner</p>
+                        <p className="text-sm opacity-80">Student is on a {student.currentStreak} day learning streak!</p>
+                      </div>
+                    </div>
+                  ) : null}
+                  {videoStats.some(v => v.skipEvents && v.skipEvents.length > 3) ? (
+                    <div className="flex items-start gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg">
+                      <Activity className="w-5 h-5 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">Video Skipping Detected</p>
+                        <p className="text-sm opacity-80">Student frequently fast-forwards through lectures instead of watching fully.</p>
+                      </div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Login Activity (Last 30 Sessions)</CardTitle>
+                </CardHeader>
+                <CardContent className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={sessionChartData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="date" tick={{fontSize: 12}} />
+                      <YAxis allowDecimals={false} />
+                      <RechartsTooltip />
+                      <Bar dataKey="active" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="video" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Video Consumption & Skips</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {videoStats.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No video analytics recorded yet.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {videoStats.map((stat, i) => (
+                      <div key={i} className="flex justify-between items-center p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                        <div className="flex items-center gap-3">
+                          <PlayCircle className="w-8 h-8 text-indigo-500" />
+                          <div>
+                            <p className="font-bold text-foreground">Video ID: {stat.videoId}</p>
+                            <p className="text-sm text-muted-foreground">Course ID: {stat.courseId}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg">{Math.round(stat.totalWatchTimeSeconds / 60)} mins watched</p>
+                          {stat.skipEvents && stat.skipEvents.length > 0 ? (
+                            <p className="text-sm text-red-500 font-medium">⚠️ {stat.skipEvents.length} skips detected</p>
+                          ) : (
+                            <p className="text-sm text-green-500 font-medium">✓ No skipping</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="timeline" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Live Student Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                  {timeline.map((event, idx) => (
+                    <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-200 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                        {event.type === 'LOGIN' ? <Monitor className="w-4 h-4" /> : event.type === 'VIDEO_WATCH' || event.type === 'VIDEO_SKIP' ? <PlayCircle className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 shadow-sm bg-white dark:bg-slate-800">
+                        <div className="flex items-center justify-between space-x-2 mb-1">
+                          <div className="font-bold text-slate-900 dark:text-slate-100">{event.type}</div>
+                          <time className="text-xs font-medium text-amber-500">{event.timestamp?.toDate() ? format(event.timestamp.toDate(), 'PP p') : 'Just now'}</time>
+                        </div>
+                        <div className="text-slate-500 dark:text-slate-400 text-sm">{event.details}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {timeline.length === 0 && <p className="text-center text-muted-foreground w-full py-8">No events recorded.</p>}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sessions" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Device & Browser Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
+                      <tr>
+                        <th className="px-6 py-3">Date & Time</th>
+                        <th className="px-6 py-3">Device</th>
+                        <th className="px-6 py-3">OS</th>
+                        <th className="px-6 py-3">Browser</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sessions.map((s, i) => (
+                        <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
+                          <td className="px-6 py-4 font-medium">{s.startTime?.toDate() ? format(s.startTime.toDate(), 'PP p') : 'N/A'}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${s.device === 'Desktop' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                              {s.device || 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">{s.os || 'Unknown'}</td>
+                          <td className="px-6 py-4">{s.browser || 'Unknown'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {sessions.length === 0 && <p className="text-center text-muted-foreground py-8">No sessions recorded.</p>}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

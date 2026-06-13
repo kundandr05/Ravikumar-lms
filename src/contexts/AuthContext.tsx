@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { Telemetry } from '@/lib/telemetry';
 
 export type UserRole = 'admin' | 'student' | 'parent';
 
@@ -45,7 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
-            setAppUser({ uid: firebaseUser.uid, ...userDoc.data() } as AppUser);
+            const userData = { uid: firebaseUser.uid, ...userDoc.data() } as AppUser;
+            setAppUser(userData);
+            
+            // Log session if not already logged in this tab session
+            if (typeof window !== 'undefined' && !sessionStorage.getItem('session_logged_' + firebaseUser.uid)) {
+              if (userData.role === 'student') {
+                Telemetry.logSessionStart(firebaseUser.uid);
+              }
+              sessionStorage.setItem('session_logged_' + firebaseUser.uid, 'true');
+            }
           } else {
             setAppUser(null);
           }
