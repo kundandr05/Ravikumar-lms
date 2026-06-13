@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [loginHistoryId, setLoginHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -55,14 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (userData.role === 'student') {
                 const sId = await Telemetry.logSessionStart(firebaseUser.uid);
                 if (sId) {
-                  setSessionId(sId);
-                  sessionStorage.setItem('current_session_id', sId);
+                  setSessionId(sId.sessionId);
+                  setLoginHistoryId(sId.loginHistoryId);
+                  sessionStorage.setItem('current_session_id', sId.sessionId);
+                  sessionStorage.setItem('current_login_history_id', sId.loginHistoryId);
                 }
               }
               sessionStorage.setItem('session_logged_' + firebaseUser.uid, 'true');
             } else if (typeof window !== 'undefined') {
               const existingSId = sessionStorage.getItem('current_session_id');
+              const existingLHId = sessionStorage.getItem('current_login_history_id');
               if (existingSId) setSessionId(existingSId);
+              if (existingLHId) setLoginHistoryId(existingLHId);
             }
           } else {
             setAppUser(null);
@@ -74,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setAppUser(null);
         setSessionId(null);
+        setLoginHistoryId(null);
       }
       
       setLoading(false);
@@ -86,17 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (appUser?.uid && sessionId) {
-        Telemetry.logSessionEnd(appUser.uid, sessionId);
+        Telemetry.logSessionEnd(appUser.uid, sessionId, loginHistoryId || undefined);
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [appUser, sessionId]);
+  }, [appUser, sessionId, loginHistoryId]);
 
   const logout = async () => {
     if (appUser?.uid && sessionId) {
-      await Telemetry.logSessionEnd(appUser.uid, sessionId);
+      await Telemetry.logSessionEnd(appUser.uid, sessionId, loginHistoryId || undefined);
       sessionStorage.removeItem('current_session_id');
+      sessionStorage.removeItem('current_login_history_id');
       sessionStorage.removeItem('session_logged_' + appUser.uid);
     }
     await auth.signOut();

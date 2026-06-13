@@ -67,16 +67,29 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     return id;
   })() : '';
 
-  // Log final metrics on unmount
+  // Log final metrics on unmount and handle Fullscreen/PiP tracking
   useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = !!document.fullscreenElement;
+      if (appUser && videoId) {
+        Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'PAUSED', {
+          fullscreen: isFullscreen
+        });
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
     return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
       stopTelemetryPolling();
       if (appUser && videoId) {
         const watchPercentage = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
         Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'PAUSED', {
-          watchDurationSeconds: watchTimeRef.current,
-          skippedDurationSeconds: skipDurationRef.current,
-          watchPercentage: Math.min(100, watchPercentage)
+          watchDuration: watchTimeRef.current,
+          skippedDuration: skipDurationRef.current,
+          watchPercentage: Math.min(100, watchPercentage),
+          lastWatchedPosition: lastTimeRef.current
         });
       }
     };
@@ -166,9 +179,10 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     const getStats = () => {
       const wp = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
       return {
-        watchDurationSeconds: watchTimeRef.current,
-        skippedDurationSeconds: skipDurationRef.current,
-        watchPercentage: Math.min(100, wp)
+        watchDuration: watchTimeRef.current,
+        skippedDuration: skipDurationRef.current,
+        watchPercentage: Math.min(100, wp),
+        lastWatchedPosition: lastTimeRef.current
       };
     };
 
@@ -189,10 +203,11 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     if (!appUser || !videoId) return;
     const wp = durationRef.current > 0 ? (watchTimeRef.current / durationRef.current) * 100 : 0;
     Telemetry.logVideoEvent(appUser.uid, courseId, videoId, 'SPEED_CHANGED', {
-      watchDurationSeconds: watchTimeRef.current,
-      skippedDurationSeconds: skipDurationRef.current,
+      watchDuration: watchTimeRef.current,
+      skippedDuration: skipDurationRef.current,
       watchPercentage: Math.min(100, wp),
-      playbackSpeed: event.data
+      playbackSpeed: event.data,
+      lastWatchedPosition: lastTimeRef.current
     });
   };
 

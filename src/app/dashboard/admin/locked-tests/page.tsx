@@ -45,9 +45,9 @@ export default function LockedTestsReviewPage() {
         const userDoc = await getDoc(doc(db, 'users', attempt.studentId));
         const userData = userDoc.exists() ? userDoc.data() : { name: 'Unknown', email: 'Unknown' };
 
-        // Fetch Integrity Logs
+        // Fetch Integrity Logs (testViolations)
         const logsQ = query(
-          collection(db, 'integrityLogs'), 
+          collection(db, 'testViolations'), 
           where('testId', '==', attempt.testId),
           where('studentId', '==', attempt.studentId),
           orderBy('timestamp', 'desc')
@@ -155,7 +155,7 @@ export default function LockedTestsReviewPage() {
                             <span className="font-mono text-red-500 shrink-0">
                               {log.timestamp?.toDate ? format(log.timestamp.toDate(), 'HH:mm:ss') : 'N/A'}
                             </span>
-                            <span>{log.reason} (Violation #{log.violationNumber})</span>
+                            <span>{log.violationType || log.reason}</span>
                           </li>
                         )) : (
                           <li className="text-muted-foreground">No detailed logs found. Auto-locked by legacy system.</li>

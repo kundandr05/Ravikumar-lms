@@ -116,26 +116,26 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
         setStreak(currentStreak);
 
         // Calculate Focus Score
-        // Baseline 100. Deduct points for skips.
         let fScore = 100;
         let totalSkips = 0;
         vData.forEach(v => {
-          totalSkips += (v.skipEvents?.length || 0);
-          if (v.skippedDurationSeconds && v.skippedDurationSeconds > 30) totalSkips += 1;
+          if (v.skippedDuration && v.skippedDuration > 30) totalSkips += 1;
         });
         fScore -= (totalSkips * 5);
         
         // Check test violations
-        const testAttemptsQ = query(collection(db, 'testAttempts'), where('studentId', '==', studentId));
-        const testAttemptsSnap = await getDocs(testAttemptsQ);
-        testAttemptsSnap.docs.forEach(doc => {
-          const d = doc.data();
-          if (d.violationCount > 0) fScore -= (d.violationCount * 10);
-        });
+        const testViolationsQ = query(collection(db, 'testViolations'), where('studentId', '==', studentId));
+        const testViolationsSnap = await getDocs(testViolationsQ);
+        fScore -= (testViolationsSnap.docs.length * 10);
 
         if (fScore < 0) fScore = 0;
-        if (vData.length === 0 && testAttemptsSnap.empty) fScore = 0; // No data = 0 focus
+        if (vData.length === 0 && testViolationsSnap.empty) fScore = 0; // No data = 0 focus
         setFocusScore(fScore);
+
+        // Calculate Missed Tests
+        const missedQ = query(collection(db, 'missedTests'), where('studentId', '==', studentId));
+        const missedSnap = await getDocs(missedQ);
+        setAnalytics((prev: any) => ({ ...prev, missedTestsCount: missedSnap.docs.length }));
 
       } catch (e) {
         console.error("Failed to load intelligence:", e);
@@ -163,14 +163,23 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
 
   // Calculate Insights
   let totalSessionSeconds = 0;
-  sessions.forEach(s => totalSessionSeconds += (s.durationSeconds || 0));
-  const totalLearningMinutes = Math.round((analytics.totalLearningTimeSeconds || totalSessionSeconds) / 60);
+  sessions.forEach(s => totalSessionSeconds += (s.duration || 0));
+  const totalLearningMinutes = Math.round((analytics.totalLearningTime || totalSessionSeconds) / 60);
   
   let totalWatchPercentage = 0;
   videoStats.forEach(v => totalWatchPercentage += (v.watchPercentage || 0));
   const avgWatchPercentage = videoStats.length > 0 ? Math.round(totalWatchPercentage / videoStats.length) : 0;
 
-  const riskLevel = enrollments.length === 0 ? 'HIGH RISK' : (sessions.length < 5 ? 'MEDIUM RISK' : 'LOW RISK');
+  let riskLevel = 'LOW RISK';
+  let riskReason = 'Active Learning, Good Attendance, Good Completion Rate';
+  if (enrollments.length === 0 || analytics.missedTestsCount >= 3 || totalLearningMinutes < 10) {
+    riskLevel = 'HIGH RISK';
+    riskReason = 'No Learning Activity, Repeated Missed Tests, Low Completion Rate';
+  } else if (sessions.length < 5 || analytics.missedTestsCount >= 1) {
+    riskLevel = 'MEDIUM RISK';
+    riskReason = 'Low Activity, Multiple Missed Tasks';
+  }
+  
   const riskColor = riskLevel === 'HIGH RISK' ? 'text-red-600 bg-red-100' : riskLevel === 'MEDIUM RISK' ? 'text-amber-600 bg-amber-100' : 'text-green-600 bg-green-100';
 
   // Prepare chart data
@@ -255,34 +264,29 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                   <CardTitle className="text-lg">AI Risk Insights</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {enrollments.length === 0 ? (
-                    <div className="flex items-start gap-3 p-3 bg-red-50 text-red-700 rounded-lg">
-                      <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold">Not enrolled in any courses</p>
-                        <p className="text-sm opacity-80">Student registered but has not started learning. Intervention recommended.</p>
-                      </div>
+                  <div className={`flex items-start gap-3 p-3 rounded-lg ${
+                    riskLevel === 'HIGH RISK' ? 'bg-red-50 text-red-700' :
+                    riskLevel === 'MEDIUM RISK' ? 'bg-amber-50 text-amber-700' :
+                    'bg-green-50 text-green-700'
+                  }`}>
+                    {riskLevel === 'HIGH RISK' ? <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" /> : 
+                     riskLevel === 'MEDIUM RISK' ? <Clock className="w-5 h-5 shrink-0 mt-0.5" /> : 
+                     <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />}
+                    <div>
+                      <p className="font-bold">{riskLevel}</p>
+                      <p className="text-sm opacity-80">{riskReason}</p>
                     </div>
-                  ) : null}
-                  {sessions.length < 5 && enrollments.length > 0 ? (
-                    <div className="flex items-start gap-3 p-3 bg-amber-50 text-amber-700 rounded-lg">
-                      <Clock className="w-5 h-5 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold">Low Platform Engagement</p>
-                        <p className="text-sm opacity-80">Student has logged in fewer than 5 times. Consistency is lacking.</p>
-                      </div>
-                    </div>
-                  ) : null}
+                  </div>
                   {streak >= 3 ? (
-                    <div className="flex items-start gap-3 p-3 bg-green-50 text-green-700 rounded-lg">
-                      <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3 p-3 bg-blue-50 text-blue-700 rounded-lg">
+                      <Flame className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold">Highly Engaged Learner</p>
                         <p className="text-sm opacity-80">Student is on a {streak} day learning streak!</p>
                       </div>
                     </div>
                   ) : null}
-                  {videoStats.some(v => v.skipEvents?.length > 3 || v.skippedDurationSeconds > 60) ? (
+                  {videoStats.some(v => v.skippedDuration && v.skippedDuration > 60) ? (
                     <div className="flex items-start gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg">
                       <Activity className="w-5 h-5 shrink-0 mt-0.5" />
                       <div>
@@ -333,13 +337,13 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                           </div>
                         </div>
                         <div className="text-left md:text-right flex flex-col md:items-end">
-                          <p className="font-bold text-lg">{Math.round((stat.watchDurationSeconds || 0) / 60)} mins watched</p>
+                          <p className="font-bold text-lg">{Math.round((stat.watchDuration || 0) / 60)} mins watched</p>
                           <div className="flex items-center gap-4 mt-1">
                             <span className="text-sm font-medium text-slate-600 bg-slate-200 px-2 py-0.5 rounded">
                               Watched: {Math.round(stat.watchPercentage || 0)}%
                             </span>
-                            {stat.skippedDurationSeconds > 0 ? (
-                              <span className="text-sm text-red-500 font-medium">⚠️ {Math.round(stat.skippedDurationSeconds)}s skipped</span>
+                            {stat.skippedDuration > 0 ? (
+                              <span className="text-sm text-red-500 font-medium">⚠️ {Math.round(stat.skippedDuration)}s skipped</span>
                             ) : (
                               <span className="text-sm text-green-500 font-medium">✓ No skipping</span>
                             )}
@@ -400,8 +404,8 @@ export default function StudentIntelligenceDashboard({ params }: { params: Promi
                     <tbody>
                       {sessions.map((s, i) => (
                         <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
-                          <td className="px-6 py-4 font-medium">{s.startTime?.toDate() ? format(s.startTime.toDate(), 'PP p') : 'N/A'}</td>
-                          <td className="px-6 py-4">{s.durationSeconds ? `${Math.round(s.durationSeconds / 60)} mins` : (s.isActive ? 'Active' : 'N/A')}</td>
+                          <td className="px-6 py-4 font-medium">{s.startTime?.toDate() ? format(s.startTime.toDate(), 'PP p') : (s.sessionStart?.toDate() ? format(s.sessionStart.toDate(), 'PP p') : 'N/A')}</td>
+                          <td className="px-6 py-4">{s.duration ? `${Math.round(s.duration / 60)} mins` : (s.isActive ? 'Active' : 'N/A')}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2 py-1 rounded text-xs font-bold ${s.device === 'Desktop' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                               {s.device || 'Unknown'}

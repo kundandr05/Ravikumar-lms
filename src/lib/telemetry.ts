@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase/firebase';
-import { collection, addDoc, serverTimestamp, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, updateDoc, increment, getDoc, Timestamp } from 'firebase/firestore';
 import { UAParser } from 'ua-parser-js';
 
 export type TimelineEventType = 
@@ -8,6 +8,8 @@ export type TimelineEventType =
   | 'COURSE_OPENED'
   | 'LESSON_OPENED'
   | 'LESSON_COMPLETED'
+  | 'STUDY_MATERIAL_VIEWED'
+  | 'STUDY_MATERIAL_DOWNLOADED'
   | 'VIDEO_STARTED'
   | 'VIDEO_PAUSED'
   | 'VIDEO_RESUMED'
@@ -34,7 +36,7 @@ export interface TelemetryEvent {
 
 export const Telemetry = {
   /**
-   * Log an event to the student's global timeline
+   * 1. STUDENT TIMELINE SYSTEM
    */
   async logTimelineEvent(event: TelemetryEvent) {
     try {
@@ -49,26 +51,7 @@ export const Telemetry = {
   },
 
   /**
-   * Activity Logs (Detailed component-level logging)
-   */
-  async logActivity(studentId: string, type: string, targetId: string, targetName: string, additionalData: any = {}) {
-    try {
-      if (!studentId) return;
-      await addDoc(collection(db, 'activityLogs'), {
-        studentId,
-        type,
-        targetId,
-        targetName,
-        ...additionalData,
-        timestamp: serverTimestamp(),
-      });
-    } catch (e) {
-      console.error("Activity logging error:", e);
-    }
-  },
-
-  /**
-   * Log a new learning session (login) and record device data
+   * 2. LOGIN HISTORY & 3. LEARNING SESSION TRACKING
    */
   async logSessionStart(studentId: string) {
     try {
@@ -86,29 +69,33 @@ export const Telemetry = {
         browser = result.browser.name || 'Unknown';
       }
 
+      const now = new Date();
+      const loginDateStr = now.toISOString().split('T')[0];
+
       // Record in loginHistory
-      await addDoc(collection(db, 'loginHistory'), {
+      const loginRef = await addDoc(collection(db, 'loginHistory'), {
         studentId,
         loginTime: serverTimestamp(),
-        device,
+        loginDate: loginDateStr,
+        deviceType: device,
         os,
         browser,
+        sessionDuration: 0
       });
 
       // Record in learningSessions
       const sessionRef = await addDoc(collection(db, 'learningSessions'), {
         studentId,
-        startTime: serverTimestamp(),
-        device,
-        os,
-        browser,
+        loginHistoryId: loginRef.id,
+        sessionStart: serverTimestamp(),
+        duration: 0,
         isActive: true
       });
 
       // Update studentAnalytics aggregate
       await setDoc(doc(db, 'studentAnalytics', studentId), {
-        totalLogins: increment(1),
-        lastLoginAt: serverTimestamp()
+        loginFrequency: increment(1),
+        lastActivity: serverTimestamp()
       }, { merge: true });
 
       await this.logTimelineEvent({
@@ -118,17 +105,14 @@ export const Telemetry = {
         metadata: { sessionId: sessionRef.id }
       });
 
-      return sessionRef.id;
+      return { sessionId: sessionRef.id, loginHistoryId: loginRef.id };
     } catch (e) {
       console.error("Session start error:", e);
       return null;
     }
   },
 
-  /**
-   * Log session end (logout or beforeunload)
-   */
-  async logSessionEnd(studentId: string, sessionId: string) {
+  async logSessionEnd(studentId: string, sessionId: string, loginHistoryId?: string) {
     try {
       if (!studentId || !sessionId) return;
       
@@ -137,22 +121,29 @@ export const Telemetry = {
       
       if (sessionDoc.exists()) {
         const data = sessionDoc.data();
-        if (!data.isActive) return; // already closed
+        if (!data.isActive) return;
 
-        const startTime = data.startTime?.toDate();
+        const startTime = data.sessionStart?.toDate();
         const endTime = new Date();
         const durationSeconds = startTime ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000) : 0;
 
         await updateDoc(sessionRef, {
-          endTime: serverTimestamp(),
-          durationSeconds,
+          sessionEnd: serverTimestamp(),
+          duration: durationSeconds,
           isActive: false
         });
 
-        // Add to total learning time in analytics
+        if (loginHistoryId) {
+          await updateDoc(doc(db, 'loginHistory', loginHistoryId), {
+            logoutTime: serverTimestamp(),
+            sessionDuration: durationSeconds
+          });
+        }
+
+        // Add to aggregate learning time
         if (durationSeconds > 0) {
           await setDoc(doc(db, 'studentAnalytics', studentId), {
-            totalLearningTimeSeconds: increment(durationSeconds)
+            totalLearningTime: increment(durationSeconds)
           }, { merge: true });
         }
       }
@@ -170,53 +161,50 @@ export const Telemetry = {
   },
 
   /**
-   * Log Video Activity
+   * 1. VIDEO ANALYTICS SYSTEM
    */
   async logVideoEvent(
     studentId: string, 
     courseId: string, 
-    videoId: string, 
-    action: 'STARTED' | 'PAUSED' | 'RESUMED' | 'COMPLETED' | 'SPEED_CHANGED',
-    stats: { watchPercentage?: number, watchDurationSeconds?: number, skippedDurationSeconds?: number, playbackSpeed?: number }
+    lessonId: string, 
+    action: 'STARTED' | 'PAUSED' | 'RESUMED' | 'COMPLETED' | 'SPEED_CHANGED' | 'SEEK_FORWARD' | 'SEEK_BACKWARD',
+    stats: { 
+      watchDuration?: number, 
+      watchPercentage?: number, 
+      skippedDuration?: number, 
+      playbackSpeed?: number,
+      pictureInPicture?: boolean,
+      fullscreen?: boolean,
+      lastWatchedPosition?: number
+    }
   ) {
     try {
-      if (!studentId || !videoId) return;
-      const refId = `${studentId}_${videoId}`;
+      if (!studentId || !lessonId) return;
+      const refId = `${studentId}_${lessonId}`;
       
-      // We will constantly merge updates so videoAnalytics holds the latest state
       await setDoc(doc(db, 'videoAnalytics', refId), {
         studentId,
         courseId,
-        videoId,
-        lastAction: action,
-        lastActionTime: serverTimestamp(),
+        lessonId,
+        timestamp: serverTimestamp(),
+        completionStatus: action === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS',
         ...stats
       }, { merge: true });
 
-      // We only log critical events to the timeline to avoid spam
-      if (action === 'STARTED') {
+      // Only timeline significant events
+      if (action === 'STARTED' || action === 'COMPLETED') {
         await this.logTimelineEvent({
           studentId,
-          type: 'VIDEO_STARTED',
-          details: `Started watching a video.`,
-          metadata: { videoId, courseId }
+          type: action === 'STARTED' ? 'VIDEO_STARTED' : 'VIDEO_COMPLETED',
+          details: `${action === 'STARTED' ? 'Started' : 'Completed'} watching a video.`,
+          metadata: { lessonId, courseId }
         });
-      } else if (action === 'COMPLETED') {
-        await this.logTimelineEvent({
-          studentId,
-          type: 'VIDEO_COMPLETED',
-          details: `Completed watching a video.`,
-          metadata: { videoId, courseId }
-        });
-        
-        // Update analytics
-        await setDoc(doc(db, 'studentAnalytics', studentId), {
-          completedVideos: increment(1)
-        }, { merge: true });
       }
 
-      // Detailed activity log
-      await this.logActivity(studentId, `VIDEO_${action}`, videoId, 'Video', stats);
+      // Update student activity
+      await setDoc(doc(db, 'studentAnalytics', studentId), {
+        lastActivity: serverTimestamp()
+      }, { merge: true });
 
     } catch (e) {
       console.error("Video telemetry error:", e);
@@ -224,19 +212,31 @@ export const Telemetry = {
   },
 
   /**
-   * Log Course Activity
+   * Course & Lesson Activity
    */
-  async logCourseAction(studentId: string, courseId: string, action: 'COURSE_OPENED' | 'LESSON_OPENED' | 'LESSON_COMPLETED', itemName: string) {
+  async logCourseAction(studentId: string, courseId: string, action: 'COURSE_OPENED' | 'LESSON_OPENED' | 'LESSON_COMPLETED', itemName: string, lessonId?: string) {
     try {
       if (!studentId) return;
 
-      await this.logActivity(studentId, action, courseId, itemName);
+      if (action === 'LESSON_OPENED' && lessonId) {
+        // Track in learning sessions if we have an active one? 
+        // We'll just update last activity
+        await setDoc(doc(db, 'studentAnalytics', studentId), {
+          lastActivity: serverTimestamp()
+        }, { merge: true });
+      }
+
+      if (action === 'LESSON_COMPLETED') {
+        await setDoc(doc(db, 'studentAnalytics', studentId), {
+          totalLessonsCompleted: increment(1)
+        }, { merge: true });
+      }
 
       await this.logTimelineEvent({
         studentId,
         type: action as TimelineEventType,
         details: `${action.replace('_', ' ')}: ${itemName}`,
-        metadata: { courseId }
+        metadata: { courseId, lessonId }
       });
 
     } catch (e) {
@@ -245,23 +245,63 @@ export const Telemetry = {
   },
 
   /**
-   * Log Assignment Activity
+   * 6. TEST INTEGRITY MONITORING
    */
+  async logTestViolation(studentId: string, testId: string, violationType: string) {
+    try {
+      if (!studentId || !testId) return;
+      
+      await addDoc(collection(db, 'testViolations'), {
+        studentId,
+        testId,
+        violationType,
+        timestamp: serverTimestamp()
+      });
+
+      await setDoc(doc(db, 'studentAnalytics', studentId), {
+        lastActivity: serverTimestamp()
+      }, { merge: true });
+
+    } catch (e) {
+      console.error("Test violation logging error:", e);
+    }
+  },
+
+  /**
+   * 10. MISSED TEST & ASSIGNMENT ANALYTICS
+   */
+  async logMissedTest(studentId: string, testId: string, courseId: string, dueDate: Date) {
+    try {
+      await setDoc(doc(db, 'missedTests', `${studentId}_${testId}`), {
+        studentId,
+        testId,
+        courseId,
+        dueDate: Timestamp.fromDate(dueDate),
+        missedStatus: true,
+        recordedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.error("Missed test logging error", e);
+    }
+  },
+
   async logAssignmentAction(studentId: string, courseId: string, assignmentId: string, action: 'ASSIGNMENT_OPENED' | 'ASSIGNMENT_SUBMIT', assignmentTitle: string) {
     try {
       if (!studentId) return;
 
       if (action === 'ASSIGNMENT_SUBMIT') {
-        await addDoc(collection(db, 'assignmentTracking'), {
+        await setDoc(doc(db, 'assignmentTracking', `${studentId}_${assignmentId}`), {
           studentId,
           courseId,
           assignmentId,
-          submittedAt: serverTimestamp(),
+          submissionDate: serverTimestamp(),
           status: 'submitted'
-        });
-      }
+        }, { merge: true });
 
-      await this.logActivity(studentId, action, assignmentId, assignmentTitle);
+        await setDoc(doc(db, 'studentAnalytics', studentId), {
+          totalAssignmentsSubmitted: increment(1)
+        }, { merge: true });
+      }
 
       await this.logTimelineEvent({
         studentId,

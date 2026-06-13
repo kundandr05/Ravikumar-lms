@@ -131,15 +131,9 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
       const newCount = violationCountRef.current + 1;
       setViolationCount(newCount);
       
-      // Log to Firebase
+      // Log to Firebase via Telemetry
       if (appUserRef.current?.uid) {
-        await addDoc(collection(db, 'integrityLogs'), {
-          studentId: appUserRef.current.uid,
-          testId: testIdRef.current,
-          timestamp: serverTimestamp(),
-          reason,
-          violationNumber: newCount
-        });
+        Telemetry.logTestViolation(appUserRef.current.uid, testIdRef.current, reason);
       }
 
       if (newCount === 1) {
