@@ -3,13 +3,11 @@
 import { useEffect, useState, useRef, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Test, Question } from '@/types';
 import { useRouter } from 'next/navigation';
-import { Telemetry } from '@/lib/telemetry';
-import { AlertTriangle, Lock } from 'lucide-react';
 
 export default function StudentTestAttemptPage({ params }: { params: Promise<{ courseId: string, testId: string }> }) {
   const { courseId, testId } = use(params);
@@ -22,27 +20,9 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [locked, setLocked] = useState(false);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Integrity variables
-  const [violationCount, setViolationCount] = useState(0);
-  const [warningMessage, setWarningMessage] = useState<string | null>(null);
-
-  // Use refs for listener callbacks to always have latest state without remounting listeners
-  const violationCountRef = useRef(0);
-  const testIdRef = useRef(testId);
-  const appUserRef = useRef(appUser);
-  const isSubmittingRef = useRef(submitting);
-  const isLockedRef = useRef(locked);
-
-  useEffect(() => {
-    violationCountRef.current = violationCount;
-    isSubmittingRef.current = submitting;
-    isLockedRef.current = locked;
-  }, [violationCount, submitting, locked]);
 
   useEffect(() => {
     async function fetchTestAndQuestions() {
@@ -76,12 +56,6 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         const attemptQ = query(collection(db, 'testAttempts'), where('studentId', '==', appUser.uid), where('testId', '==', testId));
         const attemptSnap = await getDocs(attemptQ);
         if (!attemptSnap.empty) {
-          const attempt = attemptSnap.docs[0].data();
-          if (attempt.status === 'LOCKED_FOR_REVIEW') {
-            setLocked(true);
-            setLoading(false);
-            return;
-          }
           alert("You have already completed this test.");
           router.replace('/dashboard/student/tests');
           return;
@@ -103,13 +77,6 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         setQuestions(fetchedQuestions);
         setTimeLeft(tData.durationMinutes * 60);
 
-        // Telemetry
-        Telemetry.logTimelineEvent({
-          studentId: appUser.uid,
-          type: 'TEST_STARTED',
-          description: `Started test: ${tData.title}`
-        });
-
       } catch (error) {
         console.error("Error fetching test data:", error);
       } finally {
@@ -120,59 +87,13 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     fetchTestAndQuestions();
   }, [testId, appUser, router]);
 
-  // INTEGRITY MONITORING
-  useEffect(() => {
-    if (loading || locked || submitting) return;
-
-    const handleViolation = async (reason: string) => {
-      if (isSubmittingRef.current || isLockedRef.current) return;
-      
-      const newCount = violationCountRef.current + 1;
-      setViolationCount(newCount);
-      
-      // Log to Firebase via Telemetry
-      if (appUserRef.current?.uid) {
-        Telemetry.logTestViolation(appUserRef.current.uid, testIdRef.current, reason);
-      }
-
-      if (newCount === 1) {
-        setWarningMessage("Warning 1: You have left the test window. One more violation will lock your test.");
-      } else if (newCount === 2) {
-        setWarningMessage("Warning 2: FINAL WARNING. If you leave the test window again, your test will be locked and automatically submitted.");
-      } else if (newCount >= 3) {
-        setWarningMessage(null);
-        setLocked(true);
-        // Auto submit as Locked
-        handleForceLockSubmit();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        handleViolation("Tab switched or browser minimized (visibilitychange)");
-      }
-    };
-
-    const handleBlur = () => {
-      handleViolation("Window focus lost (blur)");
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleBlur);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, [loading, locked, submitting]);
-
   // Timer logic
   useEffect(() => {
-    if (timeLeft !== null && timeLeft > 0 && !submitting && !locked) {
+    if (timeLeft !== null && timeLeft > 0 && !submitting) {
       timerRef.current = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
-    } else if (timeLeft === 0 && !submitting && !locked) {
+    } else if (timeLeft === 0 && !submitting) {
       // Auto submit when time runs out
       handleSubmit();
     }
@@ -180,50 +101,13 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [timeLeft, submitting, locked]);
+  }, [timeLeft, submitting]);
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: optionIndex
     }));
-  };
-
-  const handleForceLockSubmit = async () => {
-    if (isSubmittingRef.current || !testData || !appUserRef.current) return;
-    setSubmitting(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    let score = 0;
-    questions.forEach(q => {
-      if (q.questionId && answers[q.questionId] === q.correctOptionIndex) score += 1;
-    });
-
-    const totalScore = questions.length;
-    try {
-      await addDoc(collection(db, 'testAttempts'), {
-        testId,
-        testTitle: testData.title,
-        studentId: appUserRef.current.uid,
-        courseId,
-        score,
-        totalScore,
-        passed: score >= (testData.passingMarks || 0),
-        status: 'LOCKED_FOR_REVIEW',
-        violationCount: 3,
-        submittedAt: serverTimestamp(),
-        answers
-      });
-      
-      Telemetry.logTimelineEvent({
-        studentId: appUserRef.current.uid,
-        type: 'TEST_LOCKED',
-        description: `Test Locked: ${testData.title} (Integrity Violation)`
-      });
-
-    } catch (error) {
-      console.error("Error submitting locked test", error);
-    }
   };
 
   const handleSubmit = async () => {
@@ -247,16 +131,9 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
         score,
         totalScore,
         passed: score >= (testData.passingMarks || 0),
-        status: violationCount > 0 ? 'NEEDS_REVIEW' : 'COMPLETED',
-        violationCount,
+        status: 'COMPLETED',
         submittedAt: serverTimestamp(),
         answers
-      });
-      
-      Telemetry.logTimelineEvent({
-        studentId: appUser.uid,
-        type: 'TEST_SUBMITTED',
-        description: `Submitted test: ${testData.title} (${score}/${totalScore})`
       });
 
       alert(`Test Submitted! You scored ${score}/${totalScore}`);
@@ -270,22 +147,6 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Preparing secure test environment...</div>;
-  }
-
-  if (locked) {
-    return (
-      <div className="max-w-2xl mx-auto mt-20 text-center space-y-6">
-        <div className="flex justify-center"><Lock className="w-20 h-20 text-red-500" /></div>
-        <h1 className="text-4xl font-black text-foreground">TEST LOCKED</h1>
-        <p className="text-lg text-muted-foreground">
-          This test has been locked due to repeated integrity violations (navigating away from the test window).
-        </p>
-        <p className="text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">
-          Status: <strong>LOCKED_FOR_REVIEW</strong>. Please contact your administrator.
-        </p>
-        <Button onClick={() => router.replace('/dashboard/student/tests')}>Return to Dashboard</Button>
-      </div>
-    );
   }
 
   if (!testData || questions.length === 0) {
@@ -303,19 +164,6 @@ export default function StudentTestAttemptPage({ params }: { params: Promise<{ c
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24">
-      {warningMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl scale-in-center">
-            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
-            <h3 className="text-2xl font-bold text-slate-900">Integrity Warning</h3>
-            <p className="text-slate-600 font-medium">{warningMessage}</p>
-            <Button size="lg" className="w-full bg-red-600 hover:bg-red-700" onClick={() => setWarningMessage(null)}>
-              I Understand. Return to Test.
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Sticky Header with Timer */}
       <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-primary-foreground p-4 flex justify-between items-center px-6">
         <div>

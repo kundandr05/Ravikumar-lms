@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Log session if not already logged in this tab session
             if (typeof window !== 'undefined' && !sessionStorage.getItem('session_logged_' + firebaseUser.uid)) {
               if (userData.role === 'student') {
-                const lhId = await Telemetry.logLogin(firebaseUser.uid);
+                const lhId = await Telemetry.logLogin(firebaseUser.uid, userData.name || 'Unknown');
                 if (lhId) {
                   setLoginHistoryId(lhId);
                   sessionStorage.setItem('current_login_history_id', lhId);
