@@ -71,8 +71,11 @@ export default function LockedTestsReviewPage() {
       }
 
       setLockedAttempts(attempts);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error fetching locked tests", e);
+      if (typeof window !== 'undefined') {
+        alert("Firestore Error: " + e.message);
+      }
     } finally {
       setLoading(false);
     }
