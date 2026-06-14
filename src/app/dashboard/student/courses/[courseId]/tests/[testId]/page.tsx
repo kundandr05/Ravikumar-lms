@@ -38,16 +38,29 @@ export default function StudentPreTestPage({ params }: { params: Promise<{ cours
         }
         setIsEnrolled(true);
 
-        // 2. Fetch Test Data
+        // Count Questions
         const testDoc = await getDoc(doc(db, 'tests', testId));
+        let count = 0;
+        let testDataObj: Test | null = null;
         if (testDoc.exists()) {
-          setTestData({ testId: testDoc.id, ...testDoc.data() } as Test);
+          testDataObj = { testId: testDoc.id, ...testDoc.data() } as Test;
+          setTestData(testDataObj);
+          
+          // Count new format MCQs
+          count += (testDataObj.mcqs?.length || 0);
+          if (testDataObj.section1Mark) count += 1;
+          if (testDataObj.section2Mark) count += 1;
+          if (testDataObj.section3Mark) count += 1;
+          if (testDataObj.section5Mark) count += 1;
+          if (testDataObj.section10Mark) count += 1;
         }
 
-        // 3. Count Questions
+        // Count old format questions
         const questionsQuery = query(collection(db, 'questions'), where('testId', '==', testId));
         const questionsSnap = await getDocs(questionsQuery);
-        setQuestionCount(questionsSnap.size);
+        count += questionsSnap.size;
+
+        setQuestionCount(count);
 
       } catch (error) {
         console.error("Error fetching test data:", error);

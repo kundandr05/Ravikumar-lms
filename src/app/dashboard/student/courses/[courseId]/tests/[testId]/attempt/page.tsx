@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,8 +31,29 @@ export default function BoardExamAttemptPage({ params }: { params: Promise<{ cou
     async function fetchTest() {
       try {
         const testDoc = await getDoc(doc(db, 'tests', testId));
+        let testDataObj: Test | null = null;
         if (testDoc.exists()) {
-          setTest({ testId: testDoc.id, ...testDoc.data() } as Test);
+          testDataObj = { testId: testDoc.id, ...testDoc.data() } as Test;
+          
+          // Fallback: Fetch legacy questions if they exist
+          const questionsQuery = query(collection(db, 'questions'), where('testId', '==', testId), orderBy('order', 'asc'));
+          const questionsSnap = await getDocs(questionsQuery);
+          if (!questionsSnap.empty) {
+            const legacyMcqs: any[] = [];
+            questionsSnap.forEach(d => {
+              const data = d.data();
+              legacyMcqs.push({
+                questionId: d.id,
+                text: data.text,
+                options: data.options,
+                correctOptionIndex: data.correctOptionIndex
+              });
+            });
+            // Merge legacy MCQs with any new format MCQs
+            testDataObj.mcqs = [...(testDataObj.mcqs || []), ...legacyMcqs];
+          }
+
+          setTest(testDataObj);
         } else {
           setError('Test not found.');
         }
