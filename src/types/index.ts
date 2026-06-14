@@ -28,12 +28,24 @@ export interface Test {
   testId?: string;
   courseId: string;
   title: string;
+  subject?: string;
+  chapter?: string;
   description: string;
+  instructions?: string;
   durationMinutes: number;
+  totalMarks?: number;
   availableFrom?: any; // Firestore Timestamp
   availableUntil?: any; // Firestore Timestamp
   passingMarks?: number;
   createdAt: any;
+  
+  // Mixed Test Sections
+  mcqs?: { questionId: string; text: string; options: string[]; correctOptionIndex: number }[];
+  section1Mark?: string;
+  section2Mark?: string;
+  section3Mark?: string;
+  section5Mark?: string;
+  section10Mark?: string;
 }
 
 export interface TestAttempt {
@@ -41,12 +53,28 @@ export interface TestAttempt {
   testId: string;
   studentId: string;
   courseId: string;
-  score: number;
-  totalQuestions: number;
+  score: number; // Final Total Score (MCQ + Descriptive)
+  totalQuestions?: number;
+  totalScore?: number; // Maximum possible marks
+  mcqScore?: number;
+  descriptiveScore?: number;
+  driveLink?: string;
   passed: boolean;
-  status: 'COMPLETED' | 'LOCKED_FOR_REVIEW';
+  status: 'COMPLETED' | 'PENDING_EVALUATION' | 'LOCKED_FOR_REVIEW';
+  teacherRemarks?: string;
+  evaluatedBy?: string;
+  evaluatedAt?: any; // Firestore Timestamp
+  
+  // Scoring Breakdown
+  marks1Section?: number;
+  marks2Section?: number;
+  marks3Section?: number;
+  marks5Section?: number;
+  marks10Section?: number;
+  
   violationCount: number;
   submittedAt: any; // Firestore Timestamp
+  answers?: Record<string, number>; // MCQ answers
 }
 
 export interface Question {

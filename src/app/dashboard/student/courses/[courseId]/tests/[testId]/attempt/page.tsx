@@ -1,239 +1,277 @@
 'use client';
 
-import { useEffect, useState, useRef, use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
-import { Card, CardContent } from '@/components/ui/card';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Test, Question } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
+import { AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { Test } from '@/types';
 
-export default function StudentTestAttemptPage({ params }: { params: Promise<{ courseId: string, testId: string }> }) {
+export default function BoardExamAttemptPage({ params }: { params: Promise<{ courseId: string, testId: string }> }) {
   const { courseId, testId } = use(params);
   const { appUser } = useAuth();
   const router = useRouter();
-  
-  const [testData, setTestData] = useState<Test | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  
+
+  const [test, setTest] = useState<Test | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Answers state
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
+  const [driveLink, setDriveLink] = useState('');
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetchTestAndQuestions() {
-      if (!appUser?.uid) return;
-
+    async function fetchTest() {
       try {
         const testDoc = await getDoc(doc(db, 'tests', testId));
-        if (!testDoc.exists()) {
-          alert("Test not found");
-          return;
+        if (testDoc.exists()) {
+          setTest({ testId: testDoc.id, ...testDoc.data() } as Test);
+        } else {
+          setError('Test not found.');
         }
-        const tData = { testId: testDoc.id, ...testDoc.data() } as Test;
-        
-        // Time validation
-        const now = new Date();
-        const from = tData.availableFrom?.toDate ? tData.availableFrom.toDate() : (tData.availableFrom ? new Date(tData.availableFrom) : null);
-        const until = tData.availableUntil?.toDate ? tData.availableUntil.toDate() : (tData.availableUntil ? new Date(tData.availableUntil) : null);
-
-        if (from && now < from) {
-          alert("Test is not yet available.");
-          router.replace('/dashboard/student/tests');
-          return;
-        }
-        if (until && now > until) {
-          alert("Test deadline has passed.");
-          router.replace('/dashboard/student/tests');
-          return;
-        }
-
-        // Check if already attempted
-        const attemptQ = query(collection(db, 'testAttempts'), where('studentId', '==', appUser.uid), where('testId', '==', testId));
-        const attemptSnap = await getDocs(attemptQ);
-        if (!attemptSnap.empty) {
-          alert("You have already completed this test.");
-          router.replace('/dashboard/student/tests');
-          return;
-        }
-
-        setTestData(tData);
-
-        const questionsQuery = query(
-          collection(db, 'questions'), 
-          where('testId', '==', testId),
-          orderBy('order', 'asc')
-        );
-        const questionsSnap = await getDocs(questionsQuery);
-        const fetchedQuestions: Question[] = [];
-        questionsSnap.forEach(d => {
-          fetchedQuestions.push({ questionId: d.id, ...d.data() } as Question);
-        });
-        
-        setQuestions(fetchedQuestions);
-        setTimeLeft(tData.durationMinutes * 60);
-
-      } catch (error) {
-        console.error("Error fetching test data:", error);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load test.');
       } finally {
         setLoading(false);
       }
     }
+    fetchTest();
+  }, [testId]);
 
-    fetchTestAndQuestions();
-  }, [testId, appUser, router]);
-
-  // Timer logic
-  useEffect(() => {
-    if (timeLeft !== null && timeLeft > 0 && !submitting) {
-      timerRef.current = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !submitting) {
-      // Auto submit when time runs out
-      handleSubmit();
-    }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [timeLeft, submitting]);
-
-  const handleSelectOption = (questionId: string, optionIndex: number) => {
-    setAnswers(prev => ({
+  const handleMcqSelect = (questionId: string, optionIndex: number) => {
+    setMcqAnswers(prev => ({
       ...prev,
       [questionId]: optionIndex
     }));
   };
 
+  const validateDriveLink = (url: string) => {
+    return url.includes('drive.google.com') && (url.includes('/file/d/') || url.includes('/view') || url.includes('id='));
+  };
+
   const handleSubmit = async () => {
-    if (submitting || !testData || !appUser) return;
+    if (!test || !appUser) return;
+    
+    // Check if descriptive parts exist
+    const hasDescriptive = test.section1Mark || test.section2Mark || test.section3Mark || test.section5Mark || test.section10Mark;
+    
+    if (hasDescriptive && !validateDriveLink(driveLink)) {
+      alert("Please provide a valid Google Drive link containing your answer sheet.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to submit your test? This action cannot be undone.")) {
+      return;
+    }
+
     setSubmitting(true);
 
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    let score = 0;
-    questions.forEach(q => {
-      if (q.questionId && answers[q.questionId] === q.correctOptionIndex) score += 1;
-    });
-
-    const totalScore = questions.length;
     try {
-      await addDoc(collection(db, 'testAttempts'), {
-        testId,
-        testTitle: testData.title,
-        studentId: appUser.uid,
-        courseId,
-        score,
-        totalScore,
-        passed: score >= (testData.passingMarks || 0),
-        status: 'COMPLETED',
-        submittedAt: serverTimestamp(),
-        answers
+      // Calculate MCQ Score
+      let mcqScore = 0;
+      test.mcqs?.forEach(q => {
+        if (mcqAnswers[q.questionId] === q.correctOptionIndex) {
+          mcqScore += 1;
+        }
       });
 
-      alert(`Test Submitted! You scored ${score}/${totalScore}`);
-      router.replace('/dashboard/student/tests');
-    } catch (error) {
-      console.error("Error submitting test", error);
-      alert("Failed to submit test. Please contact support.");
-      setSubmitting(false); 
+      const attemptData = {
+        testId,
+        testTitle: test.title,
+        studentId: appUser.uid,
+        studentName: appUser.name,
+        courseId,
+        
+        mcqScore,
+        descriptiveScore: 0, // Admin will fill this later
+        score: mcqScore, // Initial score is just MCQ
+        totalScore: test.totalMarks || (test.mcqs?.length || 0),
+        
+        driveLink: hasDescriptive ? driveLink : null,
+        status: hasDescriptive ? 'PENDING_EVALUATION' : 'COMPLETED',
+        
+        passed: false, // Will be updated by admin or system later
+        violationCount: 0,
+        submittedAt: serverTimestamp(),
+        answers: mcqAnswers,
+      };
+
+      await addDoc(collection(db, 'testAttempts'), attemptData);
+      
+      alert("Test submitted successfully!");
+      router.push(`/dashboard/student/courses/${courseId}`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit test. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Preparing secure test environment...</div>;
-  }
-
-  if (!testData || questions.length === 0) {
-    return <div className="p-8 text-center text-red-500">Invalid test configuration.</div>;
-  }
-
-  const formatTime = (seconds: number | null) => {
-    if (seconds === null) return "--:--";
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const isLowTime = timeLeft !== null && timeLeft <= 60; 
+  if (loading) return <div className="p-8 text-center animate-pulse">Loading Question Paper...</div>;
+  if (error || !test) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24">
-      {/* Sticky Header with Timer */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-md rounded-b-xl border-x border-b border-slate-800 text-primary-foreground p-4 flex justify-between items-center px-6">
-        <div>
-          <h2 className="font-bold text-lg">{testData.title}</h2>
-          <p className="text-xs text-muted-foreground">{questions.length} Questions</p>
+    <div className="max-w-5xl mx-auto space-y-8 pb-20 mt-6 select-none">
+      {/* HEADER */}
+      <div className="bg-card border-b-4 border-slate-800 rounded-t-xl p-8 text-center shadow-sm space-y-4 font-serif">
+        <h1 className="text-4xl font-black tracking-tight">{test.title}</h1>
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+          {test.subject && <span>SUBJECT: {test.subject}</span>}
+          {test.durationMinutes && <span>TIME: {test.durationMinutes} MINS</span>}
+          {test.totalMarks && <span>MAX MARKS: {test.totalMarks}</span>}
         </div>
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold ${isLowTime ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-slate-800 text-slate-200'}`}>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          {formatTime(timeLeft)}
-        </div>
-      </div>
-
-      <div className="space-y-8 px-2">
-        {questions.map((q, index) => (
-          <Card key={q.questionId} className="border-slate-200 shadow-sm" id={`q-${q.questionId}`}>
-            <CardContent className="p-6 md:p-8">
-              <h3 className="text-lg font-medium text-foreground mb-6">
-                <span className="text-muted-foreground font-bold mr-3">{index + 1}.</span>
-                {q.text}
-              </h3>
-              
-              <div className="space-y-3 pl-7">
-                {q.options.map((opt, optIndex) => {
-                  const isSelected = q.questionId && answers[q.questionId] === optIndex;
-                  return (
-                    <button
-                      key={optIndex}
-                      onClick={() => q.questionId && handleSelectOption(q.questionId, optIndex)}
-                      className={`w-full text-left p-4 rounded-lg border transition-all flex items-center gap-4 ${
-                        isSelected 
-                          ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500' 
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                        isSelected ? 'border-amber-500' : 'border-slate-300'
-                      }`}>
-                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
-                      </div>
-                      <span className={`text-sm md:text-base ${isSelected ? 'text-amber-900 font-medium' : 'text-foreground'}`}>
-                        {opt}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card text-card-foreground border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="text-sm text-muted-foreground font-medium">
-            Answered: {Object.keys(answers).length} of {questions.length}
+        {test.instructions && (
+          <div className="mt-8 text-left border border-slate-700 p-6 bg-muted/20 rounded">
+            <h3 className="font-bold mb-2">General Instructions:</h3>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">{test.instructions}</p>
           </div>
-          <Button 
-            size="lg" 
-            onClick={() => {
-              if (confirm("Are you sure you want to submit your test? You cannot change your answers after submission.")) {
-                handleSubmit();
-              }
-            }}
-            disabled={submitting}
-            className="px-8"
-          >
-            {submitting ? 'Submitting...' : 'Submit Test'}
-          </Button>
-        </div>
+        )}
       </div>
+
+      <div className="space-y-12 px-2 md:px-0 font-serif text-lg">
+        
+        {/* SECTION A: MCQs */}
+        {test.mcqs && test.mcqs.length > 0 && (
+          <div className="space-y-6">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART A: Multiple Choice Questions</h2>
+              <p className="text-sm text-muted-foreground italic">Answer directly in the application.</p>
+            </div>
+            
+            {test.mcqs.map((q, i) => (
+              <Card key={q.questionId} className="border-slate-800 shadow-none">
+                <CardContent className="p-6">
+                  <p className="font-bold mb-4">{i + 1}. {q.text}</p>
+                  <div className="space-y-3 pl-4">
+                    {q.options.map((opt, optIdx) => (
+                      <label key={optIdx} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-muted/50 rounded transition-colors">
+                        <input 
+                          type="radio" 
+                          name={`mcq-${q.questionId}`}
+                          checked={mcqAnswers[q.questionId] === optIdx}
+                          onChange={() => handleMcqSelect(q.questionId, optIdx)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <span>{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* SECTION B: 1 Mark */}
+        {test.section1Mark && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART B: 1 Mark Questions</h2>
+            </div>
+            <div className="whitespace-pre-wrap p-6 border border-slate-800 rounded bg-card/50">
+              {test.section1Mark}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION C: 2 Marks */}
+        {test.section2Mark && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART C: 2 Mark Questions</h2>
+            </div>
+            <div className="whitespace-pre-wrap p-6 border border-slate-800 rounded bg-card/50">
+              {test.section2Mark}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION D: 3 Marks */}
+        {test.section3Mark && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART D: 3 Mark Questions</h2>
+            </div>
+            <div className="whitespace-pre-wrap p-6 border border-slate-800 rounded bg-card/50">
+              {test.section3Mark}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION E: 5 Marks */}
+        {test.section5Mark && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART E: 5 Mark Questions</h2>
+            </div>
+            <div className="whitespace-pre-wrap p-6 border border-slate-800 rounded bg-card/50">
+              {test.section5Mark}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION F: 10 Marks */}
+        {test.section10Mark && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-800 pb-2">
+              <h2 className="text-2xl font-bold">PART F: 10 Mark Questions</h2>
+            </div>
+            <div className="whitespace-pre-wrap p-6 border border-slate-800 rounded bg-card/50">
+              {test.section10Mark}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* SUBMISSION AREA */}
+      <Card className="border-indigo-500/30 bg-indigo-500/5 mt-12">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-indigo-400">
+            <FileText className="w-5 h-5" />
+            Submit Your Answer Sheet
+          </CardTitle>
+          <CardDescription>
+            For descriptive sections (Parts B-F), write your answers neatly on a paper, scan them into a PDF, and upload it to your Google Drive. 
+            Ensure the link access is set to <strong>"Anyone with the link can view"</strong>.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          
+          <div className="space-y-2">
+            <Label htmlFor="driveLink" className="text-base font-bold">Google Drive Link</Label>
+            <Input 
+              id="driveLink"
+              placeholder="https://drive.google.com/file/d/1XyZ.../view?usp=sharing" 
+              value={driveLink}
+              onChange={(e) => setDriveLink(e.target.value)}
+              className="font-mono"
+            />
+            {!validateDriveLink(driveLink) && driveLink.length > 0 && (
+              <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
+                <AlertCircle className="w-4 h-4" /> Please enter a valid Google Drive URL.
+              </p>
+            )}
+          </div>
+
+          <div className="pt-6 border-t border-slate-800 flex justify-end">
+            <Button size="lg" onClick={handleSubmit} disabled={submitting} className="font-bold bg-indigo-600 hover:bg-indigo-700">
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+              {submitting ? 'Submitting...' : 'Submit Final Answer Sheet'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
