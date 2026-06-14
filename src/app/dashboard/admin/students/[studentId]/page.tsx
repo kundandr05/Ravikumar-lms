@@ -128,7 +128,7 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ stude
   if (!student) return <div className="p-8 text-center text-red-500">Student not found</div>;
 
   const handleDownloadReport = () => {
-    window.print();
+    window.open(`/report/${studentId}`, '_blank');
   };
 
   return (
