@@ -77,10 +77,18 @@ export default function RegisterPage() {
           role, // uses the selected role from the dropdown
           createdAt: new Date(),
         });
-        router.push(`/dashboard/${role}`);
+        if (!user.phoneNumber) {
+          router.push('/complete-profile');
+        } else {
+          router.push(`/dashboard/${role}`);
+        }
       } else {
         const userData = userDoc.data();
-        router.push(`/dashboard/${userData.role}`);
+        if (!userData.phone || userData.phone.trim() === '') {
+          router.push('/complete-profile');
+        } else {
+          router.push(`/dashboard/${userData.role}`);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up with Google');

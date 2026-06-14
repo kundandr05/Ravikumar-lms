@@ -97,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 bg-card border-r text-card-foreground transition-transform z-50 flex flex-col md:translate-x-0 md:static w-64 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 glass-sidebar text-card-foreground transition-transform z-50 flex flex-col md:translate-x-0 md:static w-64 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between border-b">
           <Link href="/dashboard/admin" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />

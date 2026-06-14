@@ -65,7 +65,7 @@ export default function LoginPage() {
           role: 'student', // default
           createdAt: new Date(),
         });
-        router.push('/dashboard/student');
+        router.push('/complete-profile');
       } else {
         await checkUserStatusAndRedirect(user.uid, user.email);
       }
@@ -82,7 +82,11 @@ export default function LoginPage() {
     
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      router.push(`/dashboard/${userData.role}`);
+      if (!userData.phone || userData.phone.trim() === '') {
+        router.push('/complete-profile');
+      } else {
+        router.push(`/dashboard/${userData.role}`);
+      }
     } else {
       // Auto-repair: If the user exists in Firebase Auth but was deleted from Firestore Database
       console.log("User document missing, auto-repairing...");
@@ -91,9 +95,10 @@ export default function LoginPage() {
         email: email || '',
         name: 'Recovered User',
         role: 'student', // default to student on recovery
+        phone: '', // Needs phone
         createdAt: new Date(),
       });
-      router.push(`/dashboard/student`);
+      router.push(`/complete-profile`);
     }
   };
 

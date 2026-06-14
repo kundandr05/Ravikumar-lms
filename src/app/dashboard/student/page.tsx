@@ -7,6 +7,7 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Announcement } from '@/types';
 import Link from 'next/link';
 
 export default function StudentDashboard() {
@@ -16,6 +17,7 @@ export default function StudentDashboard() {
     testsTaken: 0,
     averageScore: 0,
   });
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,6 +45,24 @@ export default function StudentDashboard() {
           testsTaken: attemptsCount,
           averageScore: attemptsCount > 0 ? Math.round(totalScore / attemptsCount) : 0,
         });
+
+        // Fetch Recent Announcements
+        const enrolledCourseIds = enrollmentsSnap.docs.map(d => d.data().courseId);
+        
+        // We fetch announcements targeting 'all' OR targeting their enrolled courses
+        // Due to Firestore limitations with OR queries on arrays vs strings, we'll fetch all and filter client side
+        // Or we can just fetch all recent and filter.
+        const annQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(20));
+        const annSnap = await getDocs(annQuery);
+        const annData: Announcement[] = [];
+        annSnap.forEach(d => {
+          const ann = { announcementId: d.id, ...d.data() } as Announcement;
+          if (ann.targetAudience === 'all' || enrolledCourseIds.includes(ann.targetAudience)) {
+            annData.push(ann);
+          }
+        });
+        setAnnouncements(annData);
+
       } catch (error) {
         console.error("Error fetching student dashboard data:", error);
       } finally {
@@ -56,11 +76,37 @@ export default function StudentDashboard() {
   if (!appUser) return null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}!</h1>
         <p className="text-muted-foreground mt-2">Ready to continue your learning journey?</p>
       </div>
+
+      {announcements.length > 0 && (
+        <div className="space-y-4">
+          {announcements.map(ann => (
+            <div key={ann.announcementId} className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-indigo-800 font-bold text-lg">{ann.title}</h3>
+                  <p className="text-indigo-700 mt-1 whitespace-pre-line">{ann.message}</p>
+                </div>
+                <span className="text-xs font-semibold text-indigo-400 bg-indigo-100 px-2 py-1 rounded">
+                  {ann.createdAt?.toDate ? ann.createdAt.toDate().toLocaleDateString() : ''}
+                </span>
+              </div>
+              {ann.meetingLink && (
+                <div className="mt-3">
+                  <a href={ann.meetingLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    Join Live Class
+                  </a>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {user && !user.emailVerified && user.providerData.some(p => p.providerId === 'password') && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg flex items-start gap-3">
