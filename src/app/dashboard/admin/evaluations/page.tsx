@@ -20,15 +20,13 @@ export default function EvaluationsListPage() {
         // Fetch all test attempts that have descriptive submissions
         const q = query(
           collection(db, 'testAttempts'),
-          where('status', 'in', ['PENDING_EVALUATION', 'COMPLETED']),
           orderBy('submittedAt', 'desc')
         );
         const snap = await getDocs(q);
         
         // Filter out purely MCQ tests that don't need manual evaluation 
-        // (those without a driveLink, assuming purely MCQ tests immediately mark COMPLETED and have no driveLink)
         const allAttempts = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
-        const descriptiveAttempts = allAttempts.filter(a => a.driveLink);
+        const descriptiveAttempts = allAttempts.filter(a => a.driveLink && (a.status === 'PENDING_EVALUATION' || a.status === 'COMPLETED'));
         
         setAttempts(descriptiveAttempts);
       } catch (error) {
