@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 flex items-center justify-between border-b">
           <Link href="/dashboard/admin" className="flex items-center gap-2">
             <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />
-            <span className="text-xl font-bold text-foreground tracking-tight">
+            <span className="text-xl font-bold dark:text-white tracking-tight">
               Ravi<span className="text-amber-500">Classes</span>
             </span>
           </Link>
