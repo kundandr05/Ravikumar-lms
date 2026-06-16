@@ -150,15 +150,15 @@ export default function StudentTestsDashboard() {
     const from = test.availableFrom?.toDate ? test.availableFrom.toDate() : (test.availableFrom ? new Date(test.availableFrom) : null);
     
     return (
-      <Card key={test.testId} className="flex flex-col hover:shadow-lg transition-shadow border-slate-200">
-        <div className={`h-2 w-full rounded-t-xl ${type === 'active' ? 'bg-blue-600' : type === 'upcoming' ? 'bg-amber-400' : type === 'missed' ? 'bg-red-500' : 'bg-green-500'}`}></div>
+      <Card key={test.testId} className="flex flex-col hover:shadow-lg transition-shadow border-border">
+          <div className={`h-2 w-full rounded-t-xl ${type === 'active' ? 'bg-blue-600' : type === 'upcoming' ? 'bg-amber-400' : type === 'missed' ? 'bg-red-500' : 'bg-green-500'}`}></div>
         <CardContent className="p-6 flex flex-col flex-1">
           <div className="text-xs font-semibold text-primary mb-2 uppercase tracking-wider">{test.courseName}</div>
           <h3 className="text-xl font-bold text-foreground mb-2">{test.title}</h3>
           <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{test.description}</p>
           
           <div className="mt-auto space-y-4">
-            <div className="flex items-center text-sm font-medium text-slate-700 bg-slate-50 p-2 rounded">
+            <div className="flex items-center text-sm font-medium text-muted-foreground bg-muted p-2 rounded">
               <Clock className="w-4 h-4 mr-2 opacity-50" />
               {test.durationMinutes} Minutes
             </div>

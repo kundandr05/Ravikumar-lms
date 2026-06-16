@@ -12,6 +12,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { GamificationTracker } from '@/components/student/GamificationTracker';
 import { FocusTimer } from '@/components/student/FocusTimer';
+import { GlobalSearch } from '@/components/layout/GlobalSearch';
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const { appUser, loading, logout } = useAuth();
@@ -161,11 +162,11 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-muted/50">
         {/* Top Header */}
         <header className="h-16 flex items-center justify-between px-4 sm:px-8 border-b bg-card">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-1">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileOpen(true)}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/></svg>
             </Button>
-            <div className="hidden md:block font-medium text-muted-foreground">Welcome back, {appUser.name?.split(' ')[0] || 'Student'}</div>
+            <GlobalSearch />
           </div>
           <div className="flex items-center space-x-4">
             <GamificationTracker />

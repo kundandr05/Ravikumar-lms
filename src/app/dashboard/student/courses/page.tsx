@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { collection, query, where, getDocs, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -154,6 +154,36 @@ export default function StudentCoursesPage() {
     }
   };
 
+  const handleUnenroll = async (courseId: string) => {
+    if (!appUser?.uid || !courseId) return;
+    if (!confirm('Are you sure you want to unenroll? All your test scores and progress for this course will be permanently deleted.')) return;
+    
+    try {
+      setLoading(true);
+      // 1. Delete Enrollment
+      const enrollQuery = query(collection(db, 'enrollments'), where('studentId', '==', appUser.uid), where('courseId', '==', courseId));
+      const enrollSnap = await getDocs(enrollQuery);
+      enrollSnap.forEach(async (d) => await deleteDoc(doc(db, 'enrollments', d.id)));
+
+      // 2. Cascade Delete Test Attempts
+      const testAttemptsQuery = query(collection(db, 'testAttempts'), where('studentId', '==', appUser.uid), where('courseId', '==', courseId));
+      const testAttemptsSnap = await getDocs(testAttemptsQuery);
+      testAttemptsSnap.forEach(async (d) => await deleteDoc(doc(db, 'testAttempts', d.id)));
+
+      // 3. Cascade Delete Media Progress
+      const mediaProgressQuery = query(collection(db, 'mediaProgress'), where('studentId', '==', appUser.uid), where('courseId', '==', courseId));
+      const mediaProgressSnap = await getDocs(mediaProgressQuery);
+      mediaProgressSnap.forEach(async (d) => await deleteDoc(doc(db, 'mediaProgress', d.id)));
+
+      await fetchCoursesData();
+      alert('You have been successfully unenrolled.');
+    } catch (error) {
+      console.error("Error unenrolling:", error);
+      alert("Failed to unenroll.");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-12">
       {/* Enrolled Courses Section */}
@@ -214,12 +244,17 @@ export default function StudentCoursesPage() {
                       🎉 Congratulations on the completion of course!
                     </div>
                   ) : (
-                    <Link 
-                      href={`/dashboard/student/courses/${course.courseId}`} 
-                      className={buttonVariants({ className: "w-full bg-slate-900 hover:bg-slate-800" })}
-                    >
-                      Start Learning
-                    </Link>
+                    <div className="flex gap-2">
+                      <Link 
+                        href={`/dashboard/student/courses/${course.courseId}`} 
+                        className={buttonVariants({ className: "flex-1 bg-slate-900 hover:bg-slate-800 dark:bg-amber-600 dark:hover:bg-amber-700" })}
+                      >
+                        Start Learning
+                      </Link>
+                      <Button variant="destructive" onClick={() => handleUnenroll(course.courseId!)}>
+                        Unenroll
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -229,7 +264,7 @@ export default function StudentCoursesPage() {
       </section>
 
       {/* Available Courses Section */}
-      <section className="space-y-6 pt-8 border-t border-slate-200">
+      <section className="space-y-6 pt-8 border-t border-border">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Available Courses</h2>
           <p className="text-muted-foreground mt-2">Discover new topics and enroll in courses created by the admin.</p>
@@ -242,7 +277,7 @@ export default function StudentCoursesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableCourses.map((course) => (
-              <Card key={course.courseId} className="overflow-hidden flex flex-col border border-slate-200">
+              <Card key={course.courseId} className="overflow-hidden flex flex-col border border-border">
                 <div className="w-full h-40 bg-muted relative">
                   {course.thumbnail ? (
                     <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />

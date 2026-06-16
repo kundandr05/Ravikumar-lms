@@ -163,8 +163,8 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         </div>
 
         <div className="w-full lg:w-80 shrink-0 space-y-6">
-          <Card className="border-slate-200 sticky top-24">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
+          <Card className="border-border sticky top-24">
+            <CardHeader className="bg-muted/50 border-b pb-4">
               <CardTitle className="text-lg">Course Curriculum</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -173,10 +173,10 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
                   <Link 
                     key={l.lessonId} 
                     href={`/dashboard/student/courses/${courseId}/lessons/${l.lessonId}`}
-                    className={`flex items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${l.lessonId === lessonId ? 'bg-amber-50/50 border-l-4 border-l-amber-500' : 'border-l-4 border-l-transparent'}`}
+                    className={`flex items-center p-4 border-b border-border last:border-0 hover:bg-muted transition-colors ${l.lessonId === lessonId ? 'bg-amber-500/10 border-l-4 border-l-amber-500 text-foreground' : 'border-l-4 border-l-transparent text-muted-foreground'}`}
                   >
                     <div className="flex-1">
-                      <p className={`text-sm font-medium ${l.lessonId === lessonId ? 'text-amber-900' : 'text-slate-700'}`}>
+                      <p className={`text-sm font-medium ${l.lessonId === lessonId ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
                         {idx + 1}. {l.title}
                       </p>
                     </div>
