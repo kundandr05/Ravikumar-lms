@@ -2,6 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
+import { Home, BookOpen, Clock, FileText, Settings, Bell, LogOut, ChevronDown, Award } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -85,12 +87,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 glass-sidebar text-card-foreground transition-transform z-50 flex flex-col md:translate-x-0 md:static w-64 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between border-b">
-          <Link href="/dashboard/student" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Logo" width={24} height={24} className="rounded-md" />
-            <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Ravi<span className="text-amber-500">Classes</span>
-            </span>
-          </Link>
+            <Logo href="/dashboard/student" />
           <button className="md:hidden text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted" onClick={() => setIsMobileOpen(false)}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>

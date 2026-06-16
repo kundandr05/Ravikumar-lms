@@ -6,6 +6,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useState } from 'react';
+import { Logo } from '@/components/Logo';
 
 export default function Navbar() {
   const { appUser } = useAuth();
@@ -17,12 +18,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo.png" alt="RaviClasses Logo" width={32} height={32} className="rounded-md" />
-              <span className="text-2xl font-bold text-slate-900  tracking-tight">
-                Ravi<span className="text-primary">Classes</span>
-              </span>
-            </Link>
+            <Logo size={32} />
           </div>
 
           {/* Desktop Nav */}
