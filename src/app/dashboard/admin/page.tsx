@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                         <Tooltip 
                           cursor={{ fill: '#1e293b', opacity: 0.4 }}
                           contentStyle={{ borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a' }}
-                          formatter={(value: number, name: string, props: any) => [`${value}%`, `Student: ${props.payload.student}`]}
+                          formatter={(value: any, name: any, props: any) => [`${value}%`, `Student: ${props.payload.student}`]}
                         />
                         <Bar dataKey="score" fill="#6366f1" radius={[4, 4, 0, 0]} />
                       </BarChart>
