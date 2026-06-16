@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<'student' | 'parent'>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -27,6 +26,13 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).');
+      setLoading(false);
+      return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -40,11 +46,11 @@ export default function RegisterPage() {
         name,
         email,
         phone,
-        role,
+        role: 'student',
         createdAt: new Date(),
       });
 
-      router.push(`/dashboard/${role}`);
+      router.push(`/dashboard/student`);
     } catch (err: any) {
       let errorMessage = err.message || 'Failed to register';
       if (err.message?.includes('offline')) {
@@ -74,13 +80,13 @@ export default function RegisterPage() {
           name: user.displayName || '',
           email: user.email,
           phone: user.phoneNumber || '',
-          role, // uses the selected role from the dropdown
+          role: 'student',
           createdAt: new Date(),
         });
         if (!user.phoneNumber) {
           router.push('/complete-profile');
         } else {
-          router.push(`/dashboard/${role}`);
+          router.push(`/dashboard/student`);
         }
       } else {
         const userData = userDoc.data();
@@ -103,7 +109,7 @@ export default function RegisterPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
-            Register as a Student or Parent
+            Register as a Student
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -121,20 +127,6 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input id="phone" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">I am a</Label>
-              <Select value={role} onValueChange={(val) => setRole(val as any)} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Teacher (Admin)</SelectItem>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="parent">Parent</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -172,7 +164,7 @@ export default function RegisterPage() {
           </div>
           
           <Button variant="outline" type="button" className="w-full" onClick={handleGoogleSignup} disabled={loading}>
-            Google (Ensure Role is selected above)
+            Google
           </Button>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
