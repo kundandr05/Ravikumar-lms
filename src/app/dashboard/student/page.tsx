@@ -191,7 +191,13 @@ export default function StudentDashboard() {
                 {metrics.testsTaken > 0 ? (
                   <div className="space-y-4">
                     <p className="text-muted-foreground">Check your latest test performance.</p>
-                    <Link href="/dashboard/student/results" className={buttonVariants({ variant: "secondary", className: "w-full sm:w-auto" })}>View All Results</Link>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Link href="/dashboard/student/results" className={buttonVariants({ variant: "secondary", className: "w-full sm:w-auto" })}>View All Results</Link>
+                      <a href={`/report/${appUser.uid}`} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "default", className: "w-full sm:w-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white" })}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Download Marks Card
+                      </a>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4 text-center py-6 border-2 border-dashed border-slate-200 rounded-xl bg-muted/50">
