@@ -208,3 +208,33 @@ export interface MediaProgress {
   lastViewed: any;
   completed: boolean;
 }
+
+export interface StudentBookmark {
+  id?: string;
+  studentId: string;
+  courseId: string;
+  lessonId: string;
+  createdAt: any;
+}
+
+export interface StudentNote {
+  id?: string;
+  studentId: string;
+  courseId: string;
+  lessonId: string;
+  text: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface TeacherRecommendation {
+  id?: string;
+  targetType: 'student' | 'course';
+  targetId: string; // studentId or courseId
+  itemType: 'lesson' | 'test' | 'assignment';
+  itemId: string; // ID of the lesson, test, or assignment
+  message: string;
+  dueDate?: any; // Firestore Timestamp
+  createdAt: any;
+  createdBy: string; // admin/teacher UID
+}

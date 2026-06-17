@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { doc, getDoc, collection, query, where, getDocs, orderBy, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, setDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Course, Lesson } from '@/types';
@@ -27,6 +27,12 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
   const [isCompleted, setIsCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
   const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
+
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [noteId, setNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchLessonData() {
@@ -66,6 +72,30 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
         const progressSnap = await getDocs(progressQuery);
         if (!progressSnap.empty && progressSnap.docs[0].data().completed) {
           setIsCompleted(true);
+        }
+
+        // Fetch Bookmark
+        const bookmarkQuery = query(
+          collection(db, 'studentBookmarks'),
+          where('studentId', '==', appUser.uid),
+          where('lessonId', '==', lessonId)
+        );
+        const bookmarkSnap = await getDocs(bookmarkQuery);
+        if (!bookmarkSnap.empty) {
+          setIsBookmarked(true);
+          setBookmarkId(bookmarkSnap.docs[0].id);
+        }
+
+        // Fetch Notes
+        const noteQuery = query(
+          collection(db, 'studentNotes'),
+          where('studentId', '==', appUser.uid),
+          where('lessonId', '==', lessonId)
+        );
+        const noteSnap = await getDocs(noteQuery);
+        if (!noteSnap.empty) {
+          setNoteText(noteSnap.docs[0].data().text || '');
+          setNoteId(noteSnap.docs[0].id);
         }
 
       } catch (error) {
@@ -108,9 +138,54 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
     return id;
   })() : '';
 
-  const onPlayerStateChange: YouTubeProps['onStateChange'] = (event) => {
-    if (event.data === YouTube.PlayerState.ENDED) {
-      if (!isCompleted) handleMarkComplete();
+  const handleToggleBookmark = async () => {
+    if (!appUser?.uid) return;
+    try {
+      if (isBookmarked && bookmarkId) {
+        await deleteDoc(doc(db, 'studentBookmarks', bookmarkId));
+        setIsBookmarked(false);
+        setBookmarkId(null);
+      } else {
+        const newDocRef = doc(collection(db, 'studentBookmarks'));
+        await setDoc(newDocRef, {
+          studentId: appUser.uid,
+          courseId,
+          lessonId,
+          createdAt: serverTimestamp()
+        });
+        setIsBookmarked(true);
+        setBookmarkId(newDocRef.id);
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!appUser?.uid) return;
+    setSavingNote(true);
+    try {
+      if (noteId) {
+        await updateDoc(doc(db, 'studentNotes', noteId), {
+          text: noteText,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        const newDocRef = doc(collection(db, 'studentNotes'));
+        await setDoc(newDocRef, {
+          studentId: appUser.uid,
+          courseId,
+          lessonId,
+          text: noteText,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        setNoteId(newDocRef.id);
+      }
+    } catch (error) {
+      console.error("Error saving note:", error);
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -136,7 +211,6 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
               <YouTube 
                 videoId={videoId}
                 opts={{ width: '100%', height: '100%', playerVars: { autoplay: 0, modestbranding: 1, rel: 0 } }}
-                onStateChange={onPlayerStateChange}
                 className="w-full h-full"
                 iframeClassName="w-full h-full"
               />
@@ -146,7 +220,21 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">{lesson.title}</h1>
+            <div className="flex items-start justify-between mb-4">
+              <h1 className="text-3xl font-bold text-foreground">{lesson.title}</h1>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleToggleBookmark}
+                className={isBookmarked ? "text-amber-600 border-amber-600 bg-amber-50 dark:bg-amber-900/20" : ""}
+              >
+                <svg className="w-4 h-4 mr-2" fill={isBookmarked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              </Button>
+            </div>
+            
             <div className="flex flex-wrap items-center gap-4">
               <Button 
                 onClick={handleMarkComplete} 
@@ -160,6 +248,25 @@ export default function StudentLessonPlayerPage({ params }: { params: Promise<{ 
               </Button>
             </div>
           </div>
+          
+          <Card className="mt-8 border-border">
+            <CardHeader className="bg-muted/30 border-b pb-4">
+              <CardTitle className="text-lg">My Private Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <textarea
+                className="w-full h-32 p-3 bg-card border border-border rounded-md focus:ring-1 focus:ring-amber-500 outline-none text-sm text-foreground"
+                placeholder="Type your personal notes for this lesson here..."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <Button onClick={handleSaveNote} disabled={savingNote}>
+                  {savingNote ? 'Saving...' : 'Save Notes'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="w-full lg:w-80 shrink-0 space-y-6">
