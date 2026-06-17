@@ -122,21 +122,33 @@ export default function StudentDashboard() {
         });
 
         // 6. Fetch Teacher Recommendations
-        const recSnap = await getDocs(collection(db, 'teacherRecommendations'));
         const recommendations: TeacherRecommendation[] = [];
-        recSnap.forEach(d => {
-          const r = { id: d.id, ...d.data() } as TeacherRecommendation;
-          if (r.targetType === 'student' && r.targetId === appUser.uid) recommendations.push(r);
-          else if (r.targetType === 'course' && enrolledCourseIds.includes(r.targetId)) recommendations.push(r);
-        });
+        try {
+          const recSnap = await getDocs(collection(db, 'teacherRecommendations'));
+          recSnap.forEach(d => {
+            const r = { id: d.id, ...d.data() } as TeacherRecommendation;
+            if (r.targetType === 'student' && r.targetId === appUser.uid) recommendations.push(r);
+            else if (r.targetType === 'course' && enrolledCourseIds.includes(r.targetId)) recommendations.push(r);
+          });
+        } catch (err) {
+          console.warn("Could not fetch recommendations", err);
+        }
 
         // 7. Fetch Notes & Bookmarks
-        const [notesSnap, bookmarksSnap] = await Promise.all([
+        const nbResults = await Promise.allSettled([
           getDocs(query(collection(db, 'studentNotes'), where('studentId', '==', appUser.uid))),
           getDocs(query(collection(db, 'studentBookmarks'), where('studentId', '==', appUser.uid)))
         ]);
-        const notes = notesSnap.docs.map(d => ({ id: d.id, ...d.data() } as StudentNote));
-        const bookmarks = bookmarksSnap.docs.map(d => ({ id: d.id, ...d.data() } as StudentBookmark));
+        
+        let notes: StudentNote[] = [];
+        let bookmarks: StudentBookmark[] = [];
+
+        if (nbResults[0].status === 'fulfilled') {
+          notes = nbResults[0].value.docs.map(d => ({ id: d.id, ...d.data() } as StudentNote));
+        }
+        if (nbResults[1].status === 'fulfilled') {
+          bookmarks = nbResults[1].value.docs.map(d => ({ id: d.id, ...d.data() } as StudentBookmark));
+        }
 
         // Set Dashboard Data
         setData({

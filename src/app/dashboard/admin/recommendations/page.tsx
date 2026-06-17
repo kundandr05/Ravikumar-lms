@@ -23,6 +23,7 @@ export default function RecommendationsManagerPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Form State
   const [targetType, setTargetType] = useState<'student' | 'course'>('student');
@@ -39,7 +40,7 @@ export default function RecommendationsManagerPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const [recSnap, courseSnap, userSnap, lessonSnap, testSnap, assignSnap] = await Promise.all([
+      const results = await Promise.allSettled([
         getDocs(collection(db, 'teacherRecommendations')),
         getDocs(collection(db, 'courses')),
         getDocs(collection(db, 'users')),
@@ -48,15 +49,40 @@ export default function RecommendationsManagerPage() {
         getDocs(collection(db, 'assignments')),
       ]);
 
-      setRecommendations(recSnap.docs.map(d => ({ id: d.id, ...d.data() } as TeacherRecommendation)));
-      setCourses(courseSnap.docs.map(d => ({ courseId: d.id, ...d.data() } as Course)));
-      // Filter out admins, assume everyone else is a student
-      setStudents(userSnap.docs.map(d => ({ uid: d.id, ...d.data() } as AppUser)).filter(u => u.role !== 'admin'));
-      setLessons(lessonSnap.docs.map(d => ({ lessonId: d.id, ...d.data() } as Lesson)));
-      setTests(testSnap.docs.map(d => ({ testId: d.id, ...d.data() } as Test)));
-      setAssignments(assignSnap.docs.map(d => ({ assignmentId: d.id, ...d.data() } as Assignment)));
-    } catch (error) {
+      if (results[0].status === 'fulfilled') {
+        setRecommendations(results[0].value.docs.map(d => ({ id: d.id, ...d.data() } as TeacherRecommendation)));
+      } else {
+        console.error("Recommendations fetch failed:", results[0].reason);
+      }
+
+      if (results[1].status === 'fulfilled') {
+        setCourses(results[1].value.docs.map(d => ({ courseId: d.id, ...d.data() } as Course)));
+      }
+      
+      if (results[2].status === 'fulfilled') {
+        setStudents(results[2].value.docs.map(d => ({ uid: d.id, ...d.data() } as AppUser)).filter(u => u.role !== 'admin'));
+      }
+
+      if (results[3].status === 'fulfilled') {
+        setLessons(results[3].value.docs.map(d => ({ lessonId: d.id, ...d.data() } as Lesson)));
+      }
+
+      if (results[4].status === 'fulfilled') {
+        setTests(results[4].value.docs.map(d => ({ testId: d.id, ...d.data() } as Test)));
+      }
+
+      if (results[5].status === 'fulfilled') {
+        setAssignments(results[5].value.docs.map(d => ({ assignmentId: d.id, ...d.data() } as Assignment)));
+      }
+
+      // If any of the essential ones failed, show a warning, but don't crash everything
+      const errors = results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason.message || 'Permission denied');
+      if (errors.length > 0) {
+        setFetchError("Some data couldn't be loaded. Please update your Firebase Security Rules. Errors: " + errors[0]);
+      }
+    } catch (error: any) {
       console.error("Error fetching data:", error);
+      setFetchError(error.message || "Failed to fetch data. Check your permissions.");
     } finally {
       setLoading(false);
     }
@@ -154,6 +180,19 @@ export default function RecommendationsManagerPage() {
         <h1 className="text-3xl font-bold text-foreground">Teacher Recommendations</h1>
         <p className="text-muted-foreground mt-2">Guide your students by recommending specific lessons, tests, or assignments.</p>
       </div>
+
+      {fetchError && (
+        <div className="p-4 bg-red-100 text-red-700 border border-red-300 rounded-lg">
+          <strong>Data Fetch Error:</strong> {fetchError}
+        </div>
+      )}
+
+      {/* Debug UI block */}
+      {!loading && !fetchError && (
+         <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+           Debug Data Loaded: {students.length} students, {courses.length} courses, {lessons.length} lessons, {tests.length} tests, {assignments.length} assignments
+         </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
