@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase/firebase';
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, deleteDoc, doc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,9 +40,9 @@ export default function RecommendationsManagerPage() {
     setLoading(true);
     try {
       const [recSnap, courseSnap, userSnap, lessonSnap, testSnap, assignSnap] = await Promise.all([
-        getDocs(query(collection(db, 'teacherRecommendations'), orderBy('createdAt', 'desc'))),
+        getDocs(collection(db, 'teacherRecommendations')),
         getDocs(collection(db, 'courses')),
-        getDocs(query(collection(db, 'users'))),
+        getDocs(collection(db, 'users')),
         getDocs(collection(db, 'lessons')),
         getDocs(collection(db, 'tests')),
         getDocs(collection(db, 'assignments')),
@@ -50,7 +50,8 @@ export default function RecommendationsManagerPage() {
 
       setRecommendations(recSnap.docs.map(d => ({ id: d.id, ...d.data() } as TeacherRecommendation)));
       setCourses(courseSnap.docs.map(d => ({ courseId: d.id, ...d.data() } as Course)));
-      setStudents(userSnap.docs.map(d => ({ uid: d.id, ...d.data() } as AppUser)).filter(u => u.role === 'student'));
+      // Filter out admins, assume everyone else is a student
+      setStudents(userSnap.docs.map(d => ({ uid: d.id, ...d.data() } as AppUser)).filter(u => u.role !== 'admin'));
       setLessons(lessonSnap.docs.map(d => ({ lessonId: d.id, ...d.data() } as Lesson)));
       setTests(testSnap.docs.map(d => ({ testId: d.id, ...d.data() } as Test)));
       setAssignments(assignSnap.docs.map(d => ({ assignmentId: d.id, ...d.data() } as Assignment)));
@@ -79,6 +80,32 @@ export default function RecommendationsManagerPage() {
       };
 
       await addDoc(collection(db, 'teacherRecommendations'), payload);
+      
+      // Send notification to student(s)
+      if (targetType === 'student') {
+        await addDoc(collection(db, 'notifications'), {
+          userId: targetId,
+          title: 'New Teacher Recommendation',
+          message: `Your teacher has recommended a ${itemType} for you to complete.`,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      } else if (targetType === 'course') {
+        // Find all students in this course
+        const enrollSnap = await getDocs(query(collection(db, 'enrollments'), where('courseId', '==', targetId)));
+        const studentIds = enrollSnap.docs.map(d => d.data().studentId);
+        // Create notifications for all enrolled students
+        await Promise.all(studentIds.map(sId => 
+          addDoc(collection(db, 'notifications'), {
+            userId: sId,
+            title: 'New Course Recommendation',
+            message: `A new ${itemType} has been recommended for your course.`,
+            read: false,
+            createdAt: serverTimestamp()
+          })
+        ));
+      }
+
       alert("Recommendation sent successfully!");
       
       // Reset form
@@ -154,7 +181,7 @@ export default function RecommendationsManagerPage() {
                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                     <SelectContent>
                       {targetType === 'student' 
-                        ? students.map(s => <SelectItem key={s.uid} value={s.uid!}>{s.name} ({s.email})</SelectItem>)
+                        ? students.map(s => <SelectItem key={s.uid} value={s.uid!}>{s.name || s.email || 'Unknown User'}</SelectItem>)
                         : courses.map(c => <SelectItem key={c.courseId} value={c.courseId!}>{c.title}</SelectItem>)
                       }
                     </SelectContent>
@@ -178,9 +205,9 @@ export default function RecommendationsManagerPage() {
                   <Select value={itemId} onValueChange={setItemId}>
                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                     <SelectContent>
-                      {itemType === 'lesson' && lessons.map(l => <SelectItem key={l.lessonId} value={l.lessonId!}>{l.title}</SelectItem>)}
-                      {itemType === 'test' && tests.map(t => <SelectItem key={t.testId} value={t.testId!}>{t.title}</SelectItem>)}
-                      {itemType === 'assignment' && assignments.map(a => <SelectItem key={a.assignmentId} value={a.assignmentId!}>{a.title}</SelectItem>)}
+                      {itemType === 'lesson' ? lessons.map(l => <SelectItem key={l.lessonId} value={l.lessonId!}>{l.title}</SelectItem>) : null}
+                      {itemType === 'test' ? tests.map(t => <SelectItem key={t.testId} value={t.testId!}>{t.title}</SelectItem>) : null}
+                      {itemType === 'assignment' ? assignments.map(a => <SelectItem key={a.assignmentId} value={a.assignmentId!}>{a.title}</SelectItem>) : null}
                     </SelectContent>
                   </Select>
                 </div>

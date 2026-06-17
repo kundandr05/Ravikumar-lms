@@ -53,12 +53,14 @@ export default function StudentDashboard() {
         const allCourses: Course[] = [];
         const cMap: Record<string, Course> = {};
         coursesSnap.forEach(d => {
-          const c = { courseId: d.id, ...d.data() } as Course;
-          allCourses.push(c);
-          cMap[d.id] = c;
+          if (enrolledCourseIds.includes(d.id)) {
+            const c = { courseId: d.id, ...d.data() } as Course;
+            allCourses.push(c);
+            cMap[d.id] = c;
+          }
         });
         setCourseMap(cMap);
-        const enrolledCourses = allCourses.filter(c => enrolledCourseIds.includes(c.courseId!));
+        const enrolledCourses = allCourses;
 
         // 3. Fetch Lesson Progress & Test Attempts
         const [progressSnap, attemptsSnap] = await Promise.all([
@@ -74,9 +76,12 @@ export default function StudentDashboard() {
         const allLessons: Lesson[] = [];
         const lMap: Record<string, Lesson> = {};
         lessonsSnap.forEach(d => {
-          const l = { lessonId: d.id, ...d.data() } as Lesson;
-          allLessons.push(l);
-          lMap[d.id] = l;
+          const data = d.data();
+          if (enrolledCourseIds.includes(data.courseId)) {
+            const l = { lessonId: d.id, ...data } as Lesson;
+            allLessons.push(l);
+            lMap[d.id] = l;
+          }
         });
         setLessonMap(lMap);
 
